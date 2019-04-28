@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://zoteroswissbibbblocations/locale/overlay.dtd">
+
+<overlay
+    id="zoteroswissbibbblocations"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+    <script src="chrome://zoteroswissbibbblocations/content/scripts/zoteroswissbibbblocations.js"/>
+    <script src="chrome://zotero/content/include.js"/>
+
+    <popup
+        id="zotero-itemmenu">
+        <menu class="menu-iconic" image="chrome://zoteroswissbibbblocations/skin/glass.png" id="zotero-itemmenu-zoteroswissbibbblocations-menu" label="&zotero.zoteroswissbibbblocations.menu.label;">
+            <menupopup id="zotero-itemmenu-zoteroswissbibbblocations-menupopup">
+                <menuitem
+                    id="zotero-itemmenu-zoteroswissbibbblocations-check"
+                    label="&zotero.zoteroswissbibbblocations.locationlookup.label;"
+                    oncommand="swissbibBBLocationLookup()"/>
+            </menupopup>
+        </menu>
+    </popup>
+</overlay>
+
+<!--Bild von Pixabay, suche nach Magnifying Glass-->
