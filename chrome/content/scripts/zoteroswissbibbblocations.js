@@ -162,7 +162,8 @@ function processXML(item,xml) {
 	let isWithoutISBN = false;
 	// Formatierung der Ergebnisse
 	let date = new Date();
-	let currentDate = date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate() + " (" + date.getHours() + ":"  + date.getMinutes() + ":" + date.getSeconds() + ")";
+	let thisMonth = date.getMonth() + 1;
+	let currentDate = date.getFullYear() + "-" + thisMonth + "-" + date.getDate() + " (" + date.getHours() + ":"  + date.getMinutes() + ":" + date.getSeconds() + ")";
 	let holdingsFormatted = currentDate + " Bestand Swissbib BB\n=======================================";
 	let xmlResponse = xml.responseXML;
 	// Haben wir Ergebnisse in Swissbib BB?
