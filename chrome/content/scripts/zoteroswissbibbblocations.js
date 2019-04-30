@@ -71,20 +71,17 @@ function isValidIsbn(isbn) {
 	
 	// ISBN-13
     if (isbn.length == 13) {
-		checksum = 	
-		  10 - 
-		  (
+		let sum = 
 			(
 			  parseInt(isbn[0]) + parseInt(isbn[2]) + parseInt(isbn[4]) + 
 			  parseInt(isbn[6]) +	parseInt(isbn[8]) + parseInt(isbn[10])
 			) 
-			+ 
-			3 * (
+			+ 3 * 
+			(
 			  parseInt(isbn[1]) + parseInt(isbn[3]) + parseInt(isbn[5]) + 
 			  parseInt(isbn[7]) +	parseInt(isbn[9]) + parseInt(isbn[11])
-			) 
-			% 10
-		  ) % 10;
+			);			
+		checksum =   (10 - (sum % 10)) % 10;
     }
 
 	// ISBN-10
