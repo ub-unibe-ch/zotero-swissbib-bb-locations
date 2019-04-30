@@ -11,7 +11,8 @@
         em:type="2"
         em:creator="Denis Maier"
         em:description="Zotero/Jurism-Plugin zur Bestandsabfrage im Swissbib Basel Bern"
-        em:homepageURL="https://github.com/UB-Bern/zotero-swissbib-bb-locations">
+        em:homepageURL="https://github.com/UB-Bern/zotero-swissbib-bb-locations"
+		em:updateURL="https://raw.githubusercontent.com/UB-Bern/zotero-swissbib-bb-locations/master/update.rdf">
         <em:type>2</em:type>
         <em:targetApplication>
             <Description>
