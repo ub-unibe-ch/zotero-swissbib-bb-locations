@@ -1,6 +1,6 @@
 # Makefile
 
-VERSION = 0.1.1
+VERSION = 0.1.2
 
 build:
 	zip -r zotero-swissbib-bb-locations-$(VERSION).xpi chrome/* chrome.manifest install.rdf options.xul
