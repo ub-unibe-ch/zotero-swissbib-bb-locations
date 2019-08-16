@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.1.4
+
+- Eintrag im Kontextmenü erscheint nun auch, wenn Zotero auf Englisch ausgeführt wird.
+
+
 ## 0.1.3
 
 - Monatszählung korriert
