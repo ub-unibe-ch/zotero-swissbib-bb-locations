@@ -2,6 +2,7 @@
 
 ## 0.1.5
 
+- Bibliothek Unitobler (B410) ist nun in Liste der Kurierbibliotheken
 
 ## 0.1.4
 
