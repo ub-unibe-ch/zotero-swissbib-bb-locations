@@ -18,6 +18,7 @@ function swissbibBBLocationLookupInitialize () {
 		"B404", //BMü
 		"B410", //BTO
 		"B415", //SOB
+		"B410", //Unitobler
 		];
 		
 	libraryCodeUBBeOnline = "B405";
