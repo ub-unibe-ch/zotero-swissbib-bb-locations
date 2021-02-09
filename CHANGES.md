@@ -1,5 +1,8 @@
 # Änderungen
 
+## 0.2
+- Wechsel zu Swisscovery (IZ UB Bern)
+
 ## 0.1.5
 
 - Bibliothek Unitobler (B410) ist nun in Liste der Kurierbibliotheken
