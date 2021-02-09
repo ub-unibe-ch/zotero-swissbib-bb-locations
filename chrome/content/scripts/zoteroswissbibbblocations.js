@@ -272,7 +272,7 @@ async function swissbibBBLocationLookup() {
 			// Mindestens eine gültige ISBN vorhanden
 			// SRU-Request
 			// let URL = sruPrefix + isbns.join("+") + sruSuffix;
-			let URL = sruPrefix + isbns.join("+");
+			let URL = sruPrefix + isbns.join(" or alma.isbn=");
 			let sru = new XMLHttpRequest();
 			//sru.onreadystatechange = async function() {
 			sru.onreadystatechange = async function() {
