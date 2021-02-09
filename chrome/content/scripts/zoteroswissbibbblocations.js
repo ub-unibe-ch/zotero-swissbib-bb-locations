@@ -23,9 +23,7 @@ function swissbibBBLocationLookupInitialize () {
 		
 	libraryCodeUBBeOnline = "B405";
 	
-	// Was mit ExWi machen?
-
-		
+	
 	// SRU-URL
 
 	// mögliche Parameter
@@ -171,7 +169,7 @@ function processXML(item,xml) {
 	let date = new Date();
 	let thisMonth = date.getMonth() + 1;
 	let currentDate = date.getFullYear() + "-" + thisMonth + "-" + date.getDate() + " (" + date.getHours() + ":"  + date.getMinutes() + ":" + date.getSeconds() + ")";
-	let holdingsFormatted = currentDate + " Bestand Swissbib BB\n=======================================";
+	let holdingsFormatted = currentDate + " Bestand Swisscovery UB Bern\n=======================================";
 	let xmlResponse = xml.responseXML;
 	// Haben wir Ergebnisse in Swissbib BB?
 	// Nein =>
@@ -202,11 +200,13 @@ function processXML(item,xml) {
 				}
 				if (holding.querySelector("subfield[code='c']")) 
 					holdingLibraryLocation = holding.querySelector("subfield[code='c']").textContent;
+				/* 
 				if (holding.querySelector("subfield[code='e']"))
 					holdingLibraryConditions = holding.querySelector("subfield[code='e']").textContent;
 				if (holding.querySelector("subfield[code='z']")) {
 					holdingVolumeInformation = holding.querySelector("subfield[code='z']").textContent;
-				}
+				} 
+				*/
 				holdingFormatted = "\n" + holdingLibrary;
 				if (holdingLibraryLocation) holdingFormatted = holdingFormatted + ", " + holdingLibraryLocation;
 				if (holdingLibraryConditions) holdingFormatted = holdingFormatted + ", " + holdingLibraryConditions;
