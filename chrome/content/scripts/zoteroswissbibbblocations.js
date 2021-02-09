@@ -27,7 +27,13 @@ function swissbibBBLocationLookupInitialize () {
 
 		
 	// SRU-URL
-	sruPrefix = "http://sru.swissbib.ch/sru/search/bbdb?query=+dc.identifier+any+";
+
+	// mögliche Parameter
+
+	
+    // https://slsp-ube.alma.exlibrisgroup.com/view/sru/41SLSP_UBE?version=1.2&operation=searchRetrieve&recordSchema=marcxml&query=alma.isbn=9783863214159
+	sruPrefix = "https://slsp-ube.alma.exlibrisgroup.com/view/sru/41SLSP_UBE?version=1.2&operation=searchRetrieve&recordSchema=marcxml&query=alma.isbn=";
+	
 	sruSuffix = "&operation=searchRetrieve&recordSchema=info%3Asrw%2Fschema%2F1%2Fmarcxml-v1.1-light&maximumRecords=10&x-info-10-get-holdings=true&startRecord=0&recordPacking=XML&availableDBs=defaultdb&sortKeys=Submit+query";
 
 	// Tags & Strings
@@ -158,7 +164,7 @@ function printResults() {
 function processXML(item,xml) {
 	// Schalter setzen
 	let isInUBBe = false;
-  let isInUBBeOnline = false;
+    let isInUBBeOnline = false;
 	let isinUBBeKurierbib = false;
 	let isWithoutISBN = false;
 	// Formatierung der Ergebnisse
@@ -173,7 +179,7 @@ function processXML(item,xml) {
 		holdingsFormatted += ("\n" + noResultsInSwissbibBBText);
 	// Ja =>
 	} else {
-		let holdings = xmlResponse.querySelectorAll("holdings > datafield[tag='949']");
+		let holdings = xmlResponse.querySelectorAll("datafield[tag='AVA']");
 		for (const holding of holdings) {
 			let holdingLibraryCode, 
 				holdingLibrary, 
@@ -181,15 +187,10 @@ function processXML(item,xml) {
 				holdingLibraryConditions, 
 				holdingVolumeInformation, 
 				holdingFormatted;
-			if ((holding.querySelector("subfield[code='B']").textContent) == "SNL") {
-				// Special handling for SNL
-				holdingLibrary = holding.querySelector("subfield[code='B']").textContent;
-				holdingFormatted = "\n" + holdingLibrary;
-			} 
-			else {
-				holdingLibraryCode = holding.querySelector("subfield[code='F']").textContent;
-				if (holding.querySelector("subfield[code='0']")) {
-					holdingLibrary = holding.querySelector("subfield[code='0']").textContent;
+				//
+				holdingLibraryCode = holding.querySelector("subfield[code='b']").textContent;
+				if (holding.querySelector("subfield[code='q']")) {
+					holdingLibrary = holding.querySelector("subfield[code='q']").textContent;
 				} else {
 					if (holdingLibraryCode == "B405") {
 						holdingLibrary = "Bern UB Online";
@@ -199,10 +200,10 @@ function processXML(item,xml) {
 						holdingLibrary = holdingLibraryCode;
 					}
 				}
-				if (holding.querySelector("subfield[code='1']")) 
-					holdingLibraryLocation = holding.querySelector("subfield[code='1']").textContent;
-				if (holding.querySelector("subfield[code='5']"))
-					holdingLibraryConditions = holding.querySelector("subfield[code='5']").textContent;
+				if (holding.querySelector("subfield[code='c']")) 
+					holdingLibraryLocation = holding.querySelector("subfield[code='c']").textContent;
+				if (holding.querySelector("subfield[code='e']"))
+					holdingLibraryConditions = holding.querySelector("subfield[code='e']").textContent;
 				if (holding.querySelector("subfield[code='z']")) {
 					holdingVolumeInformation = holding.querySelector("subfield[code='z']").textContent;
 				}
@@ -210,10 +211,10 @@ function processXML(item,xml) {
 				if (holdingLibraryLocation) holdingFormatted = holdingFormatted + ", " + holdingLibraryLocation;
 				if (holdingLibraryConditions) holdingFormatted = holdingFormatted + ", " + holdingLibraryConditions;
 				if (holdingVolumeInformation) holdingFormatted = holdingFormatted + " (=> " + holdingVolumeInformation + ")";
-			}
+			
 			// Aktuelles Holding zur Holdingliste hinzufügen
 			holdingsFormatted += holdingFormatted;
-			
+
 			// In UB Bern?
 			// Irgendwo in UB Bern oder Bern Online
 			if (holdingLibrary.startsWith("Bern UB") || (holdingLibrary == "B405")) isInUBBe = true;
@@ -270,7 +271,8 @@ async function swissbibBBLocationLookup() {
 		} else {
 			// Mindestens eine gültige ISBN vorhanden
 			// SRU-Request
-			let URL = sruPrefix + isbns.join("+") + sruSuffix;
+			// let URL = sruPrefix + isbns.join("+") + sruSuffix;
+			let URL = sruPrefix + isbns.join("+");
 			let sru = new XMLHttpRequest();
 			//sru.onreadystatechange = async function() {
 			sru.onreadystatechange = async function() {
