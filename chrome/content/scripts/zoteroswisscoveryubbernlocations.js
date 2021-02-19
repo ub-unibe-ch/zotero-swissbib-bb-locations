@@ -209,7 +209,12 @@ Zotero.swisscoveryubbernlocations.getItemPolicy = async function (BibRecordID, H
 	let url = "https://api-eu.hosted.exlibrisgroup.com/almaws/v1/bibs/" + BibRecordID + "/holdings/" + HoldingID + "/items?format=json&apikey=" + apiKey;
 	response = await fetch(url);
 	parsed = await response.json();
-	policy = await parsed.item[0].item_data.policy.desc;
+	let policy;
+	if (parsed.item === undefined) {
+		policy = "Leihbedingungen nicht verfügbar";
+	} else {
+		policy = await parsed.item[0].item_data.policy.desc;
+	}
 	return policy;
 }
 
@@ -436,6 +441,7 @@ Zotero.swisscoveryubbernlocations.LocationLookup = async function () {
 			// Keine (oder keine gültige) ISBN vorhanden
 			let isInUBBe = false;
 			let isInUBBeOnline = false;
+			let isInUBBeOnlineViaEBA = false;
 			let isinUBBeKurierbib = false;
 			let isWithoutISBN = true;
 			Zotero.swisscoveryubbernlocations.ApplyTags(item,isInUBBe,isinUBBeKurierbib,isInUBBeOnline,isInUBBeOnlineViaEBA,isWithoutISBN);
