@@ -1,5 +1,8 @@
 # Änderungen
 
+## 0.2.2
+- Fehlerkorrekturen
+
 ## 0.21
 - Namensänderung zu Swisscovery UB Bern Locations
 - kleinere Anpassungen wegen Swissbib->Swisscovery (z.B. Namen der Tags)
