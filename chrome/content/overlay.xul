@@ -1,25 +1,36 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE overlay SYSTEM "chrome://zoteroswissbibbblocations/locale/overlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://zoteroswisscoveryubbernlocations/locale/overlay.dtd">
 
 <overlay
-    id="zoteroswissbibbblocations"
+    id="zoteroswisscoveryubbernlocations"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-    <script src="chrome://zoteroswissbibbblocations/content/scripts/zoteroswissbibbblocations.js"/>
+    
+    <script src="chrome://zoteroswisscoveryubbernlocations/content/scripts/zoteroswisscoveryubbernlocations.js"/>
     <script src="chrome://zotero/content/include.js"/>
-
+    
+    <!-- Eintrag im Kontextmenü-->
     <popup
         id="zotero-itemmenu">
-        <menu class="menu-iconic" image="chrome://zoteroswissbibbblocations/skin/glass.png" id="zotero-itemmenu-zoteroswissbibbblocations-menu" label="&zotero.zoteroswissbibbblocations.menu.label;">
-            <menupopup id="zotero-itemmenu-zoteroswissbibbblocations-menupopup">
+        <menu class="menu-iconic" image="chrome://zoteroswisscoveryubbernlocations/skin/glass.png" id="zotero-itemmenu-zoteroswissbibbblocations-menu" label="&zotero.swisscoveryubbernlocations.itemmenu.label;">
+            <menupopup id="zotero-itemmenu-zoteroswisscoveryubbernlocations-menupopup">
                 <menuitem
-                    id="zotero-itemmenu-zoteroswissbibbblocations-check"
-                    label="&zotero.zoteroswissbibbblocations.locationlookup.label;"
-                    oncommand="swissbibBBLocationLookup()"/>
+                    id="zotero-itemmenu-zoteroswisscoveryubbernlocations-check"
+                    label="&zotero.swisscoveryubbernlocations.itemmenu.locationlookup.label;"
+                    oncommand="Zotero.swisscoveryubbernlocations.LocationLookup()"/>
             </menupopup>
         </menu>
     </popup>
-</overlay>
-
-<!--Bild von Pixabay, suche nach Magnifying Glass-->
+    
+    <!-- Menüeintrag-->
+    <menupopup id="menu_ToolsPopup">
+        <menuitem 
+            id="menu_Tools-swisscoverylocations-preferences" 
+            label="&zotero.swisscoveryubbernlocations.menu.preferences.label;" 
+            oncommand ="Zotero.swisscoveryubbernlocations.openPreferenceWindow()"/>
+        </menupopup>
+        
+        
+    </overlay>
+    
+    <!--Bild von Pixabay, suche nach Magnifying Glass Zotero.swisscoveryubbernlocations.openPreferenceWindow()-->

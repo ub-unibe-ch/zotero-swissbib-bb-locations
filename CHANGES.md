@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.21
+- Namensänderung zu Swisscovery UB Bern Locations
+- kleinere Anpassungen wegen Swissbib->Swisscovery (z.B. Namen der Tags)
+- Verbesserungen beim Tagging von E-Medien
+
 ## 0.2
 - Wechsel zu Swisscovery (IZ UB Bern)
 

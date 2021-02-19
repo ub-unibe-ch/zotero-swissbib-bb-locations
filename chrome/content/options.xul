@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://zotero-platform/content/preferences.css"?>
+
+<!DOCTYPE window SYSTEM "chrome://zoteroswisscoveryubbernlocations/locale/options.dtd">
+
+<!-- onload="updatePreferenceWindow('all');" -->
+<prefwindow id="swisscoveryubbernlocations-pref" title="&zotero.swisscoveryubbernlocations-preferences.title;" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<stringbundleset id="stringbundleset">
+		<stringbundle id="swisscoveryubbernlocations-options" src="chrome://swisscoveryubbernlocations/locale/options.properties"/>
+	</stringbundleset>
+  <prefpane label="&zotero.swisscoveryubbernlocations-preferences;" id="swisscoveryubbernlocations-prefpane">
+    <preferences>
+      <!-- <preference id="pref-swisscoveryubbernlocations-sruurl" name="extensions.swisscoveryubbernlocations.sruurl" type="string"/>-->
+      <preference id="pref-swisscoveryubbernlocations-apikey" name="extensions.swisscoveryubbernlocations.apikey" type="string"/>
+    </preferences>
+    <groupbox>
+      <!-- <label control="id-swisscoveryubbernlocations-sruurl" value="SRU"/>
+      <textbox id="id-swisscoveryubbernlocations-sruurl" preference="pref-swisscoveryubbernlocations-sruurl" flex="1"/>-->
+      <label control="id-swisscoveryubbernlocations-API" value="APIkey"/>
+      <textbox id="id-swisscoveryubbernlocations-API" preference="pref-swisscoveryubbernlocations-apikey" flex="1"/>
+    </groupbox>
+  </prefpane>
+
+  <script src="options.js"/>
+  <script src="chrome://zotero/content/include.js"/>
+
+</prefwindow>

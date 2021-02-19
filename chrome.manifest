@@ -1,8 +1,8 @@
-content zoteroswissbibbblocations chrome/content/
+content zoteroswisscoveryubbernlocations chrome/content/
 
-overlay chrome://zotero/content/zoteroPane.xul chrome://zoteroswissbibbblocations/content/overlay.xul
+overlay chrome://zotero/content/zoteroPane.xul chrome://zoteroswisscoveryubbernlocations/content/overlay.xul
 
-locale  zoteroswissbibbblocations  en-US   chrome/locale/en-US/
-locale  zoteroswissbibbblocations  de   chrome/locale/de/
+locale  zoteroswisscoveryubbernlocations  en-US   chrome/locale/en-US/
+locale  zoteroswisscoveryubbernlocations  de   chrome/locale/de/
 
-skin    zoteroswissbibbblocations  default chrome/skin/default/zoteroswissbibbblocations/
+skin    zoteroswisscoveryubbernlocations  default chrome/skin/default/zoteroswisscoveryubbernlocations/
