@@ -248,8 +248,7 @@ Zotero.swisscoveryubbernlocations.processXML = async function (item,xml) {
 			for (const eholding of eholdings) {
 				let eholdingAvailability = (eholding.querySelector("subfield[code='e']").textContent == "Available") ? "Online verfügbar" : "Online nicht verfügbar";
 				let eholdingZones = eholding.querySelectorAll("subfield[code='b']");
-				let eholdingPackage;
-				if (eholding.querySelector("subfield[code='m']")) eholdingPackage = ", " + eholding.querySelector("subfield[code='m']").textContent;
+				let eholdingPackage = (eholding.querySelector("subfield[code='m']")) ? ", " + eholding.querySelector("subfield[code='m']").textContent : ", kein Paketkauf"
 				let eholdingZonesString = "";
 				for (const zone of eholdingZones) {
 					eholdingZonesString = eholdingZonesString + ", " + zone.textContent;
