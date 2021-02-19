@@ -11,7 +11,7 @@
                 <em:id>zotero@chnm.gmu.edu</em:id>
                 <em:minVersion>5.0</em:minVersion>
                 <em:maxVersion>5.*</em:maxVersion>
-                <em:updateLink>https://github.com/UB-Bern/zotero-swissbib-bb-locations/releases/download/v0.2/zotero-swissbib-bb-locations-0.21.xpi</em:updateLink>
+                <em:updateLink>https://github.com/UB-Bern/zotero-swissbib-bb-locations/releases/download/v0.21/zotero-swisscovery-ubbern-locations-0.21.xpi</em:updateLink>
               </rdf:Description>
             </em:targetApplication>
             <em:targetApplication>
@@ -19,7 +19,7 @@
                 <em:id>juris-m@juris-m.github.io</em:id>
                 <em:minVersion>5.0</em:minVersion>
                 <em:maxVersion>5.*</em:maxVersion>
-                <em:updateLink>https://github.com/UB-Bern/zotero-swissbib-bb-locations/releases/download/v0.2/zotero-swissbib-bb-locations-0.21.xpi</em:updateLink>
+                <em:updateLink>https://github.com/UB-Bern/zotero-swissbib-bb-locations/releases/download/v0.21/zotero-swisscovery-ubbern-locations-0.21.xpi</em:updateLink>
               </rdf:Description>
             </em:targetApplication>
           </rdf:Description>
