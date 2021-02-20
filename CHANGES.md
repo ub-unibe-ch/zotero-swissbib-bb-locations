@@ -1,5 +1,8 @@
 # Änderungen
 
+## 0.2.3
+- Default-Prefs in XPI integriert
+
 ## 0.2.2
 - Fehlerkorrekturen
 
