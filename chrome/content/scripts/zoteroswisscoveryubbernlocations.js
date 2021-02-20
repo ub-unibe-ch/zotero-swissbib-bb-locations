@@ -280,7 +280,7 @@ Zotero.swisscoveryubbernlocations.processXML = async function (item,xml) {
 			}
 		}
 		else {
-			eHoldingsFormatted += "\nKeine elektronischen Beständen vorhanden";
+			eHoldingsFormatted += "\nKeine elektronischen Bestände vorhanden";
 		}
 		if (xmlResponse.querySelector("datafield[tag='AVA']")) {
 		let holdings = xmlResponse.querySelectorAll("datafield[tag='AVA']");
