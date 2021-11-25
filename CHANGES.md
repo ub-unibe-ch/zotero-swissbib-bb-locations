@@ -1,5 +1,8 @@
 # Änderungen
 
+## 0.2.5
+- neue Funktion: Tags mit DDC-Präfix in Abstract verschieben
+
 ## 0.2.4
 - Bibliothek Mittelstrasse zur Liste der Kurierbibliotheken hinzugefügt
 
