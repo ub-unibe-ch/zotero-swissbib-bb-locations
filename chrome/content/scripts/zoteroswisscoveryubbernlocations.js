@@ -51,6 +51,7 @@ Zotero.swisscoveryubbernlocations.Initialize = function () {
 		"B452", //FBB
 		"B465", //JBB
 		"B500", //vonRoll
+		"B555", //BMi
 		"B404", //BMü
 		"B410", //BTO
 		"B415", //SOB
