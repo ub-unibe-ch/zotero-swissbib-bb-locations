@@ -1,5 +1,8 @@
 # Änderungen
 
+## 0.2.4
+- Bibliothek Mittelstrasse zur Liste der Kurierbibliotheken hinzugefügt
+
 ## 0.2.3
 - Default-Prefs in XPI integriert
 
