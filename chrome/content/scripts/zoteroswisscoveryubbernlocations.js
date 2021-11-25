@@ -469,3 +469,38 @@ Zotero.swisscoveryubbernlocations.LocationLookup = async function () {
 		}
 	};
 };
+
+Zotero.swisscoveryubbernlocations.orderNoteToAbstract = async function () {
+	// Zuerst holen wir die aktuell ausgewählten Titel
+	var ZoteroPane = Zotero.getActiveZoteroPane();
+	var selectedItems = ZoteroPane.getSelectedItems();
+	// Alle nicht-Buch-Titel werden herausgefiltert
+	var items = selectedItems.filter(item => item.itemTypeID == Zotero.ItemTypes.getID('book'));
+	// Loop durch die Items
+	for (const item of items) {
+		tags = item.getTags();
+		// initialize vars
+		let ddcs = [];
+		let orderCode = "";
+		let orderNote = "";
+		let ddcOrderCodeSeparator;
+		// iterate over tags
+		for (let tag of tags) {
+			if (tag.tag.startsWith("DDC")) {
+				// tag is a DDC
+				tagText = tag.tag.replace(/[^0-9X]/gi, '');
+				ddcs.push(tagText)
+			}
+			else if (tag.tag.startsWith("BC")) {
+				// tag is an orderCode
+				orderCode =  tag.tag.substring(2);
+			}
+		}
+		// construct orderNote
+		ddcOrderCodeSeparator = (ddcs.length == 0 || orderCode == "") ? "" : " // ";
+		orderNote = ddcs.join(', ') + ddcOrderCodeSeparator + orderCode;
+		// update abstract field and save item
+		item.setField('abstractNote', orderNote);
+		await item.saveTx();
+	};
+};

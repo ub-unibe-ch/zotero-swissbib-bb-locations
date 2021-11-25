@@ -18,6 +18,10 @@
                     id="zotero-itemmenu-zoteroswisscoveryubbernlocations-check"
                     label="&zotero.swisscoveryubbernlocations.itemmenu.locationlookup.label;"
                     oncommand="Zotero.swisscoveryubbernlocations.LocationLookup()"/>
+                <menuitem
+                    id="zotero-itemmenu-zoteroswisscoveryubbernlocations-order-note-to-abstract"
+                    label="&zotero.swisscoveryubbernlocations.itemmenu.orderNoteToAbstract.label;"
+                    oncommand="Zotero.swisscoveryubbernlocations.orderNoteToAbstract()"/>
             </menupopup>
         </menu>
     </popup>
