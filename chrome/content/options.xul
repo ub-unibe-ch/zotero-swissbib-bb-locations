@@ -27,10 +27,10 @@
     <separator class="thin"/>
 
     <groupbox>
-      <caption label="Speichern in Feld: "/>
+      <caption label="&zotero.swisscoveryubbernlocations-preferences.targetField.title;"/>
       <radiogroup id="id-swisscoveryubbernlocations-targetField" preference="pref-swisscoveryubbernlocations-targetField">
-        <radio label="Extra" value='extra'/>
-        <radio label="Zusammenfassung" value='abstractNote'/>
+        <radio label="&zotero.swisscoveryubbernlocations-preferences.targetField.toExtra;" value='extra'/>
+        <radio label="&zotero.swisscoveryubbernlocations-preferences.targetField.toAbstractNote;" value='abstractNote'/>
       </radiogroup>
     </groupbox>
 
