@@ -71,6 +71,8 @@ Zotero.swisscoveryubbernlocations.Initialize = function () {
 	// sruPrefix holen wir neu über die prefs
 	sruPrefix = Zotero.swisscoveryubbernlocations.getPref("sruurl");
 	apiKey = Zotero.swisscoveryubbernlocations.getPref("apikey");
+	targetField = Zotero.swisscoveryubbernlocations.getPref("targetField");
+
 	
 	// sruSuffix braucht es nicht mehr.
 	//sruSuffix = "&operation=searchRetrieve&recordSchema=info%3Asrw%2Fschema%2F1%2Fmarcxml-v1.1-light&maximumRecords=10&x-info-10-get-holdings=true&startRecord=0&recordPacking=XML&availableDBs=defaultdb&sortKeys=Submit+query";
@@ -339,8 +341,8 @@ Zotero.swisscoveryubbernlocations.processXML = async function (item,xml) {
 
 	// Holdings speichern
 	// Im Feld Zusammenfassung
-	let oldAbstractNote = item.getField('abstractNote');
-	item.setField('abstractNote', holdingsFormatted + "\n============================\n\n" + oldAbstractNote);
+	let oldAbstractNote = item.getField(targetField);
+	item.setField(targetField, holdingsFormatted + "\n============================\n\n" + oldAbstractNote);
 	// Oder in Notiz?
 	// var note = new Zotero.Item('note');
 	// note.setNote(holdingsFormatted);
@@ -413,8 +415,8 @@ Zotero.swisscoveryubbernlocations.processXML2 = async function (xml) {
 }
 
 Zotero.swisscoveryubbernlocations.updateLocations = async function (item,holdings) {
-	let oldAbstractNote = item.getField('abstractNote');
-	item.setField('abstractNote', holdings + "\n============================\n\n" + oldAbstractNote);
+	let oldAbstractNote = item.getField(targetField);
+	item.setField(targetField, holdings + "\n============================\n\n" + oldAbstractNote);
 }
 
 //////////////////////////////////////////////////////////////////
