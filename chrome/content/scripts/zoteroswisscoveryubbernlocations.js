@@ -484,8 +484,7 @@ Zotero.swisscoveryubbernlocations.orderNoteFromTags = async function () {
 		// initialize vars
 		let ddcs = [];
 		let orderCode = "";
-		let orderNote = "";
-		let ddcOrderCodeSeparator;
+		let budgetCode = "";
 		// iterate over tags
 		for (let tag of tags) {
 			if (tag.tag.startsWith("DDC")) {
@@ -495,13 +494,21 @@ Zotero.swisscoveryubbernlocations.orderNoteFromTags = async function () {
 			}
 			else if (tag.tag.startsWith("BC")) {
 				// tag is an orderCode
-				orderCode =  tag.tag.substring(2);
+				orderCode =  tag.tag.substring(3);
+			}
+			else if (tag.tag.startsWith("ETAT")) {
+				// tag is an budgetCode
+				budgetCode =  tag.tag.substring(5);
 			}
 		}
 		// construct orderNote
-		ddcOrderCodeSeparator = (ddcs.length == 0 || orderCode == "") ? "" : " // ";
-		orderNote = ddcs.join(', ') + ddcOrderCodeSeparator + orderCode;
-		// update abstract field and save item
+		let orderNote = [];
+		orderNote.push(budgetCode)
+		orderNote.push(ddcs.join(', '))
+		orderNote.push(orderCode)
+		orderNote = orderNote.filter(Boolean)
+		orderNote = orderNote.join(' // ')
+		// update volume field and save item
 		item.setField('volume', orderNote);
 		await item.saveTx();
 	};
