@@ -472,7 +472,7 @@ Zotero.swisscoveryubbernlocations.LocationLookup = async function () {
 	};
 };
 
-Zotero.swisscoveryubbernlocations.orderNoteToAbstract = async function () {
+Zotero.swisscoveryubbernlocations.orderNoteFromTags = async function () {
 	// Zuerst holen wir die aktuell ausgewählten Titel
 	var ZoteroPane = Zotero.getActiveZoteroPane();
 	var selectedItems = ZoteroPane.getSelectedItems();
@@ -502,7 +502,7 @@ Zotero.swisscoveryubbernlocations.orderNoteToAbstract = async function () {
 		ddcOrderCodeSeparator = (ddcs.length == 0 || orderCode == "") ? "" : " // ";
 		orderNote = ddcs.join(', ') + ddcOrderCodeSeparator + orderCode;
 		// update abstract field and save item
-		item.setField('abstractNote', orderNote);
+		item.setField('volume', orderNote);
 		await item.saveTx();
 	};
 };

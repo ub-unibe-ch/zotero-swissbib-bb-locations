@@ -21,7 +21,7 @@
                 <menuitem
                     id="zotero-itemmenu-zoteroswisscoveryubbernlocations-order-note-to-abstract"
                     label="&zotero.swisscoveryubbernlocations.itemmenu.orderNoteToAbstract.label;"
-                    oncommand="Zotero.swisscoveryubbernlocations.orderNoteToAbstract()"/>
+                    oncommand="Zotero.swisscoveryubbernlocations.orderNoteFromTags()"/>
             </menupopup>
         </menu>
     </popup>
