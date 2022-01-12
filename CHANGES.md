@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 0.2.6
+- EBA-Pakete über "TEMP" identifizieren
 - Speicherort der Standorte wählbar (Extra/Zusammenfassung)
 
 ## 0.2.5
