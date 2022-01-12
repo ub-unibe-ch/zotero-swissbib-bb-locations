@@ -1,5 +1,8 @@
 # Änderungen
 
+## 0.2.6
+- Speicherort der Standorte wählbar (Extra/Zusammenfassung)
+
 ## 0.2.5
 - neue Funktion: Bestellnotizen in Abstract verschieben
 
