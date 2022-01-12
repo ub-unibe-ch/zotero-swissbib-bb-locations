@@ -1,5 +1,8 @@
 # Änderungen
 
+## 0.2.7
+- Support für Etat-Codes
+
 ## 0.2.6
 - EBA-Pakete über "TEMP" identifizieren
 - Speicherort der Standorte wählbar (Extra/Zusammenfassung)
