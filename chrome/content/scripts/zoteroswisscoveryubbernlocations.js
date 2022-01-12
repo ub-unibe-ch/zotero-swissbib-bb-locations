@@ -259,7 +259,7 @@ Zotero.swisscoveryubbernlocations.processXML = async function (item,xml) {
 				let eHoldingFormatted = `\n${eholdingAvailability}${eholdingZonesString}${eholdingPackage}`;
 				eHoldingsFormatted += eHoldingFormatted;
 				if (eholdingAvailability == "Online verfügbar") {
-					if (!eholdingPackage.includes('EBA')) {
+					if (!eholdingPackage.includes('TEMP')) {
 						isInUBBeOnline = true;
 						isInUBBe = true;
 					} else {
