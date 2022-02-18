@@ -10,7 +10,7 @@
               <rdf:Description>
                 <em:id>zotero@chnm.gmu.edu</em:id>
                 <em:minVersion>5.0</em:minVersion>
-                <em:maxVersion>5.*</em:maxVersion>
+                <em:maxVersion>6.*</em:maxVersion>
                 <em:updateLink>https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/v0.2.7/zotero-swisscovery-ubbern-locations-0.2.7.xpi</em:updateLink>
               </rdf:Description>
             </em:targetApplication>
@@ -18,7 +18,7 @@
               <rdf:Description>
                 <em:id>juris-m@juris-m.github.io</em:id>
                 <em:minVersion>5.0</em:minVersion>
-                <em:maxVersion>5.*</em:maxVersion>
+                <em:maxVersion>6.*</em:maxVersion>
                 <em:updateLink>https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/v0.2.7/zotero-swisscovery-ubbern-locations-0.2.7.xpi</em:updateLink>
               </rdf:Description>
             </em:targetApplication>
