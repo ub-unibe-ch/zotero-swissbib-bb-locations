@@ -1,5 +1,8 @@
 # Änderungen
 
+## 0.2.8
+- Kompatibilitätsupdate für Zotero 6.0
+
 ## 0.2.7
 - Support für Etat-Codes
 
