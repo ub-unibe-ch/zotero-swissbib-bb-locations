@@ -6,6 +6,6 @@ Das Addon befindet sich in einem frühen Entwicklungsstadium. Bisher sind nur di
 
 ## License
 
-Copyright (C) 2019--2022 Denis Maier
+Copyright (C) 2019--2023 Denis Maier
 
 Distributed under the GPLv3 License.
