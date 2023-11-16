@@ -483,7 +483,7 @@ Zotero.swisscoveryubbernlocations.orderNoteFromTags = async function () {
 		tags = item.getTags();
 		// initialize vars
 		let ddcs = [];
-		let orderCode = "";
+		let orderCodes = [];
 		let budgetCode = "";
 		// iterate over tags
 		for (let tag of tags) {
@@ -494,7 +494,8 @@ Zotero.swisscoveryubbernlocations.orderNoteFromTags = async function () {
 			}
 			else if (tag.tag.startsWith("BC")) {
 				// tag is an orderCode
-				orderCode =  tag.tag.substring(3);
+				orderCodeText =  tag.tag.substring(3);
+				orderCodes.push(orderCodeText);
 			}
 			else if (tag.tag.startsWith("ETAT")) {
 				// tag is an budgetCode
@@ -503,11 +504,11 @@ Zotero.swisscoveryubbernlocations.orderNoteFromTags = async function () {
 		}
 		// construct orderNote
 		let orderNote = [];
-		orderNote.push(budgetCode)
-		orderNote.push(ddcs.join(', '))
-		orderNote.push(orderCode)
-		orderNote = orderNote.filter(Boolean)
-		orderNote = orderNote.join(' // ')
+		orderNote.push(budgetCode);
+		orderNote.push(ddcs.join(', '));
+		orderNote.push(orderCodes.join(', ')); // maybe better use a semicolon?
+		orderNote = orderNote.filter(Boolean);
+		orderNote = orderNote.join(' // ');
 		// update volume field and save item
 		item.setField('volume', orderNote);
 		await item.saveTx();

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 0.2.9
+- Mehrere Bestellcode-Tags korrekt im Feld Band speichern
+
 ## 0.2.8
 - Kompatibilitätsupdate für Zotero 6.0
 
