@@ -11,4 +11,4 @@ Das Addon befindet sich in einem frühen Entwicklungsstadium. Bisher sind nur di
 
 Copyright (C) 2019--2023 Denis Maier
 
-Distributed under the GPLv3 License.
+Distributed under the AGPLv3 License.
