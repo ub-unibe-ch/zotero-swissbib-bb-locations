@@ -1,0 +1,17 @@
+{
+  "addons": {
+    "zoteroswisscoveryubbernlocations@ubbe.org": {
+      "updates": [
+        {
+          "version": "0.3",
+          "update_link": "https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/latest/download/zotero-swisscovery-ub-bern-locations.xpi",
+          "applications": {
+            "zotero": {
+              "strict_min_version": "6.999"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
