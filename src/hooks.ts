@@ -1,10 +1,7 @@
 import {
-  BasicExampleFactory,
-  HelperExampleFactory,
-  KeyExampleFactory,
-  // PromptExampleFactory,
-  // UIExampleFactory,
-} from "./modules/examples";
+  Base,
+} from "./modules/helpers";
+
 import {
   RightClickMenu,
 } from "./modules/rightclickmenu";
@@ -21,9 +18,9 @@ async function onStartup() {
   ]);
   initLocale();
 
-  BasicExampleFactory.registerPrefs();
+  Base.registerPrefs();
 
-  BasicExampleFactory.registerNotifier();
+  Base.registerNotifier();
 
   await onMainWindowLoad(window);
 }
@@ -119,7 +116,7 @@ async function onNotify(
     type == "tab" &&
     extraData[ids[0]].type == "reader"
   ) {
-    BasicExampleFactory.exampleNotifierCallback();
+    Base.exampleNotifierCallback();
   } else {
     return;
   }
@@ -141,43 +138,43 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
   }
 }
 
-function onShortcuts(type: string) {
-  switch (type) {
-    case "larger":
-      KeyExampleFactory.exampleShortcutLargerCallback();
-      break;
-    case "smaller":
-      KeyExampleFactory.exampleShortcutSmallerCallback();
-      break;
-    case "confliction":
-      KeyExampleFactory.exampleShortcutConflictingCallback();
-      break;
-    default:
-      break;
-  }
-}
+// function onShortcuts(type: string) {
+//   switch (type) {
+//     case "larger":
+//       KeyExampleFactory.exampleShortcutLargerCallback();
+//       break;
+//     case "smaller":
+//       KeyExampleFactory.exampleShortcutSmallerCallback();
+//       break;
+//     case "confliction":
+//       KeyExampleFactory.exampleShortcutConflictingCallback();
+//       break;
+//     default:
+//       break;
+//   }
+// }
 
-function onDialogEvents(type: string) {
-  switch (type) {
-    case "dialogExample":
-      HelperExampleFactory.dialogExample();
-      break;
-    case "clipboardExample":
-      HelperExampleFactory.clipboardExample();
-      break;
-    case "filePickerExample":
-      HelperExampleFactory.filePickerExample();
-      break;
-    case "progressWindowExample":
-      HelperExampleFactory.progressWindowExample();
-      break;
-    case "vtableExample":
-      HelperExampleFactory.vtableExample();
-      break;
-    default:
-      break;
-  }
-}
+// function onDialogEvents(type: string) {
+//   switch (type) {
+//     case "dialogExample":
+//       HelperExampleFactory.dialogExample();
+//       break;
+//     case "clipboardExample":
+//       HelperExampleFactory.clipboardExample();
+//       break;
+//     case "filePickerExample":
+//       HelperExampleFactory.filePickerExample();
+//       break;
+//     case "progressWindowExample":
+//       HelperExampleFactory.progressWindowExample();
+//       break;
+//     case "vtableExample":
+//       HelperExampleFactory.vtableExample();
+//       break;
+//     default:
+//       break;
+//   }
+// }
 
 // Add your hooks here. For element click, etc.
 // Keep in mind hooks only do dispatch. Don't add code that does real jobs in hooks.
@@ -190,6 +187,6 @@ export default {
   onMainWindowUnload,
   onNotify,
   onPrefsEvent,
-  onShortcuts,
-  onDialogEvents,
+  // onShortcuts,
+  // onDialogEvents,
 };
