@@ -33,14 +33,14 @@ export class LocationLookup {
     static targetField;
 
     // Tags & Strings
-    static noResultsInSwissbibBBText = "Keine Ergebnisse";
-    static isWithoutISBNText = "UB Bern Standortcheck: ohne (gültige) ISBN";
-    static isNotInUBBEText = 'UB Bern Standortcheck: nein';
-    static isInUBBeText = 'UB Bern Standortcheck: ja';
-    static isinUBBeKurierbibText = 'UB Bern Standortcheck: Kurierbibliothek';
-    static isInUBBeOnlineText = 'UB Bern Standortcheck: Online';
-    static isInUBBeOnlineViaEBAText = 'UB Bern Standortcheck: Online via EBA';
-    static idsbbBEpossibly = 'UB Bern Standortcheck: eventuell';
+    static noResultsInSwissbibBBText = "_UBE-Bestand: Keine Ergebnisse";
+    static isWithoutISBNText = "_UBE-Bestand: ohne (gültige) ISBN";
+    static isNotInUBBEText = '_UBE-Bestand: nein';
+    static isInUBBeText = '_UBE-Bestand: ja';
+    static isinUBBeKurierbibText = '_UBE-Bestand: Kurierbibliothek';
+    static isInUBBeOnlineText = '_UBE-Bestand: Online';
+    static isInUBBeOnlineViaEBAText = '_UBE-Bestand: Online via EBA';
+    static idsbbBEpossibly = '_UBE-Bestand: eventuell';
 
     static tags = [this.isInUBBeOnlineText, this.isWithoutISBNText, this.isInUBBeText, this.isinUBBeKurierbibText, this.isNotInUBBEText, this.idsbbBEpossibly];
 
