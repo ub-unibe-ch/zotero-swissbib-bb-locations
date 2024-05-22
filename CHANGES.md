@@ -1,5 +1,8 @@
 # Änderungen
 
+## 0.2.10
+- Rapido-Titel korrekt anzeigen
+
 ## 0.2.9
 - Mehrere Bestellcode-Tags korrekt im Feld Band speichern
 
