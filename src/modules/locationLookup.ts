@@ -242,6 +242,7 @@ export class LocationLookup {
                 for (const holding of holdings) {
                     let holdingLibraryCode,
                         holdingLibrary,
+                        holdingLibraryViaRapido,
                         holdingLibraryLocation,
                         holdingFormatted,
                         holdingItemPolicy,
@@ -260,8 +261,11 @@ export class LocationLookup {
                             holdingLibrary = holdingLibraryCode;
                         }
                     }
+                    if (holding.querySelector("subfield[code='j']"))
+                        holdingLibraryViaRapido = holding.querySelector("subfield[code='j']").textContent == "RS_BORROW";
                     if (holding.querySelector("subfield[code='c']"))
                         holdingLibraryLocation = holding.querySelector("subfield[code='c']").textContent;
+                    if (holdingLibraryLocation.startsWith('Borrowing Location')) holdingLibraryLocation += " (via Rapido)";
                     if (holding.querySelector("subfield[code='0']"))
                         holdingBibRecordID = holding.querySelector("subfield[code='0']").textContent;
                     if (holding.querySelector("subfield[code='8']"))
@@ -278,9 +282,9 @@ export class LocationLookup {
 
                     // In UB Bern?
                     // Irgendwo in UB Bern oder Bern Online
-                    if (holdingLibrary.startsWith("Bern UB") || (holdingLibrary == "B405")) isInUBBe = true;
+                    if ((holdingLibrary.startsWith("Bern UB") && !(holdingLibraryViaRapido)) || (holdingLibrary == "B405")) isInUBBe = true;
                     // Kurierbibliothek
-                    if (LocationLookup.kurierbibliothekenUBBe.includes(holdingLibraryCode)) isinUBBeKurierbib = true;
+                    if (LocationLookup.kurierbibliothekenUBBe.includes(holdingLibraryCode) && !(holdingLibraryViaRapido)) isinUBBeKurierbib = true;
                 }
             }
             else {
