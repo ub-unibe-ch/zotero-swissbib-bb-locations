@@ -40,7 +40,7 @@ jobs:
 
       - name: Publish release
         run: |
-          git add src/install.rdf src/manifest.json update.rdf updates.json
+          git add src/install.rdf update.rdf updates.json # src/manifest.json
           git commit -m "Release $version" 1>&2
           git tag -a -m "Release $version" "$version"
 
