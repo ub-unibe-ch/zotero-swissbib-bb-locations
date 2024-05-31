@@ -20,6 +20,9 @@ jobs:
       - name: Test
         run: echo "Are we here?"
       
+      - name: Show Tag
+        run: echo $(git describe --tags || echo ci-test)
+      
     #   - name: Install dependencies
     #     run: sudo apt update && sudo apt install jq
 
