@@ -11,8 +11,7 @@ jobs:
     name: Build and release plugin
     runs-on: ubuntu-latest
     env:
-      version: 123
-      # echo $(git describe --tags || echo ci-test)
+      version: echo $(git describe --tags || echo ci-test)
       assetname: zotero-swisscovery-ubbern-locations
       updatelink: https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/${version}/${assetname}-${version}.xpi
 
@@ -29,8 +28,8 @@ jobs:
       - name: Run build
         run: |
           mkdir build
-          # zip -r build/${assetname}-${version}.xpi src/*
-          zip -r build/test.xpi src/*
+          zip -r build/${assetname}-${version}.xpi src/*
+          # zip -r build/test.xpi src/*
 
       - name: Prepare Update Manifests
         run: |
