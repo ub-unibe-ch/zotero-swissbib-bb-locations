@@ -17,19 +17,22 @@ jobs:
       - name: Setup git
         run: git config --global user.email "ci@example.com" && git config --global user.name "GitHub CI"
       
-      - name: Install dependencies
-        run: sudo apt update && sudo apt install jq
+      - name: Test
+        run: echo "Are we here?"
+      
+    #   - name: Install dependencies
+    #     run: sudo apt update && sudo apt install jq
 
-      - name: Echo tag version
-        run: echo $(git describe --tags || echo ci-test)
+    #   - name: Echo tag version
+    #     run: echo $(git describe --tags || echo ci-test)
 
-      - name: Run build
-        run: ./build.sh $(git describe --tags || echo ci-test)
+    #   - name: Run build
+    #     run: ./build.sh $(git describe --tags || echo ci-test)
 
-      - name: Prepare Update Manifests
-        run: ./publish.sh $(git describe --tags || echo ci-test )
+    #   - name: Prepare Update Manifests
+    #     run: ./publish.sh $(git describe --tags || echo ci-test )
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Zotero Swisscovery UB Bern plugin (zipped)
-          path: "build/*.xpi"
+    #   - uses: actions/upload-artifact@v4
+    #     with:
+    #       name: Zotero Swisscovery UB Bern plugin (zipped)
+    #       path: "build/*.xpi"

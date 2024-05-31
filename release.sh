@@ -23,4 +23,4 @@ perl -pi -e "s/em:version=\"[^\"]*/em:version=\"$version/;" src/install.rdf
 git add src/install.rdf #src/manifest.json
 git commit -m "Version ${version}" 1>&2
 git tag -a -m "Version ${version}" "${version}"
-git push --follow-tags
+git push --tags origin
