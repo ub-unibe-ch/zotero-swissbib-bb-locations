@@ -11,10 +11,7 @@ jobs:
     name: Build and release plugin
     runs-on: ubuntu-latest
     env:
-      version: echo $(git describe --tags || echo ci-test)
       assetname: zotero-swisscovery-ubbern-locations
-      updatelink: https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/${version}/${assetname}-${version}.xpi
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,12 +24,15 @@ jobs:
 
       - name: Run build
         run: |
+          version=$(git describe --tags || echo ci-test)
           mkdir build
           zip -r build/${assetname}-${version}.xpi src/*
           # zip -r build/test.xpi src/*
 
-      - name: Prepare Update Manifests
+      - name: Prepare Update M  anifests
         run: |
+          version=$(git describe --tags || echo ci-test)
+          updatelink=https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/${version}/${assetname}-${version}.xpi
           jq ".addons[\"zoteroswisscoveryubbernlocations@ubbe.org\"].updates[0].update_hash = \"sha256:`shasum -a 256 build/${assetname}-${version}.xpi | cut -d' ' -f1`\"" updates.json.tmpl |
           jq --arg version "$version" '.addons["zoteroswisscoveryubbernlocations@ubbe.org"].updates[0].version = $version' |
           jq --arg updatelink "$updatelink" '.addons["zoteroswisscoveryubbernlocations@ubbe.org"].updates[0].update_link = $updatelink' > updates.json
@@ -40,6 +40,7 @@ jobs:
 
       - name: Publish release
         run: |
+          version=$(git describe --tags || echo ci-test)
           git add src/install.rdf update.rdf updates.json # src/manifest.json
           git commit -m "Release $version" 1>&2
           git tag -a -m "Release $version" "$version"
