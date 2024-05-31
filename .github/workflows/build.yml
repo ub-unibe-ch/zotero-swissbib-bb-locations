@@ -20,6 +20,9 @@ jobs:
       - name: Install dependencies
         run: sudo apt update && sudo apt install jq
 
+      - name: Echo tag version
+        run: echo $(git describe --tags || echo ci-test)
+
       - name: Run build
         run: ./build.sh $(git describe --tags || echo ci-test)
 
