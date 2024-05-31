@@ -27,9 +27,9 @@ jobs:
 
       - name: Run build
         run: |
-          rm -rf build
           mkdir build
-          zip -r build/${assetname}-${version}.xpi src/*
+          # zip -r build/${assetname}-${version}.xpi src/*
+          zip -r build/test.xpi src/*
 
       - name: Prepare Update Manifests
         run: |
@@ -47,4 +47,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Zotero Swisscovery UB Bern plugin (zipped)
-          path: "*.xpi"
+          path: "build/*.xpi"
