@@ -10,8 +10,6 @@ jobs:
   build-plugin:
     name: Build and release plugin
     runs-on: ubuntu-latest
-    env:
-      assetname: zotero-swisscovery-ubbern-locations
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,20 +21,10 @@ jobs:
         run: sudo apt update && sudo apt install jq
 
       - name: Run build
-        run: |
-          version=$(git describe --tags || echo ci-test)
-          mkdir build
-          zip -r build/${assetname}-${version}.xpi src/*
-          # zip -r build/test.xpi src/*
+        run: ./build.sh (git describe --tags || echo ci-test)
 
-      - name: Prepare Update M  anifests
-        run: |
-          version=$(git describe --tags || echo ci-test)
-          updatelink=https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/${version}/${assetname}-${version}.xpi
-          jq ".addons[\"zoteroswisscoveryubbernlocations@ubbe.org\"].updates[0].update_hash = \"sha256:`shasum -a 256 build/${assetname}-${version}.xpi | cut -d' ' -f1`\"" updates.json.tmpl |
-          jq --arg version "$version" '.addons["zoteroswisscoveryubbernlocations@ubbe.org"].updates[0].version = $version' |
-          jq --arg updatelink "$updatelink" '.addons["zoteroswisscoveryubbernlocations@ubbe.org"].updates[0].update_link = $updatelink' > updates.json
-          cp updates.json update.rdf
+      - name: Prepare Update Manifests
+        run: ./prepare-updates.sh ( git describe --tags || echo ci-test )
 
       - name: Publish release
         run: |
