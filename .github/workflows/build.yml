@@ -11,7 +11,8 @@ jobs:
     name: Build and release plugin
     runs-on: ubuntu-latest
     env:
-      version: $(git describe --tags || echo ci-test)
+      version: 123
+      # echo $(git describe --tags || echo ci-test)
       assetname: zotero-swisscovery-ubbern-locations
       updatelink: https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/${version}/${assetname}-${version}.xpi
 
