@@ -23,7 +23,7 @@ if [ "$current" != "$version" ]; then
     jq --arg ver "$version" '.version = $ver' "$MANIFEST_JSON" > temp.json && mv temp.json "$MANIFEST_JSON"
     
     # Update install.rdf
-    # perl -pi -e "s/em:version=\"[^\"]*\"/em:version=\"$version\"/" "$INSTALL_RDF"
+    perl -pi -e "s/em:version=\"[^\"]*\"/em:version=\"$version\"/" "$INSTALL_RDF"
     
     # Commit changes if any
     git add "$MANIFEST_JSON" #"$INSTALL_RDF"
