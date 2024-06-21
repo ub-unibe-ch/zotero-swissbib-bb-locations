@@ -11,7 +11,8 @@ export $(grep -v '^#' .env | xargs)
 branch=$(git rev-parse --abbrev-ref HEAD)
 
 # Check if a pull request already exists for the branch
-existing_pr=$(gh pr list --search "head:${REPO_OWNER}:${branch}" --json number --jq '.[] | .number')
+#existing_pr=$(gh pr list --search "head:${REPO_OWNER}:${branch}" --json number --jq '.[] | .number')
+existing_pr=$(gh pr list --search "${branch}" --json number --jq '.[] | .number')
 
 git push --set-upstream origin $branch
 
