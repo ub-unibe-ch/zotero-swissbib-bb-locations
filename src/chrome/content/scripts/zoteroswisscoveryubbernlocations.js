@@ -347,12 +347,6 @@ Zotero.swisscoveryubbernlocations.processXML = async function (item,xml) {
 	// Im Feld Zusammenfassung
 	let oldAbstractNote = item.getField(targetField);
 	item.setField(targetField, holdingsFormatted + "\n============================\n\n" + oldAbstractNote);
-	// Oder in Notiz?
-	// var note = new Zotero.Item('note');
-	// note.setNote(holdingsFormatted);
-	// ??? VAR1 note.parentKey = item.key;
-  // ??? ODER note.parentID = item.id;
-	// note.saveTx();
 }
 
 //XML Parsen
@@ -455,17 +449,10 @@ Zotero.swisscoveryubbernlocations.LocationLookup = async function () {
 		} else {
 			// Mindestens eine gültige ISBN vorhanden
 			// SRU-Request
-			// URL-Konstruktion ist hässlich; man kann die isbns sicherlich besser verbinden;
-			// für den Moment ok
 			let URL = sruPrefix + isbns.join(" or alma.isbn=");
 			let sru = new XMLHttpRequest();
 			sru.onreadystatechange = async function() {
 					if (this.readyState == 4 && this.status == 200) {
-					/* let results;
-					results = await Zotero.swisscoveryubbernlocations.processXML2(this);
-					results.then((x) => {
-						Zotero.swisscoveryubbernlocations.updateLocations(item,x);
-					}); */
 					await Zotero.swisscoveryubbernlocations.processXML(item,this)
 					await item.saveTx();
 			}; 
