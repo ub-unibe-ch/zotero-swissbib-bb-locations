@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.2.11
+- Kompatibilität mit Zotero 6 und 7 (Legacy-Code eingefroren und wird in einer der kommenden Versionen entfernt; neue Features nur noch in der Zotero 7 Codebase).
+- Automatisierter Build- und Publish-Workflow
+- Automatisierte Unit- und Integrationtests
+
 ## 0.2.10
 - Rapido-Titel korrekt anzeigen
 
