@@ -1,0 +1,5 @@
+<!ENTITY zotero.swisscoveryubbernlocations-preferences.title "Einstellungen für Swisscovery UB Bern Standortabfrage">
+<!ENTITY zotero.swisscoveryubbernlocations-preferences "Einstellungen für Swisscovery UB Bern Standortabfrage">
+<!ENTITY zotero.swisscoveryubbernlocations-preferences.targetField.title "Standorte speichern im Feld:">
+<!ENTITY zotero.swisscoveryubbernlocations-preferences.targetField.toExtra "Extra">
+<!ENTITY zotero.swisscoveryubbernlocations-preferences.targetField.toAbstractNote "Zusammenfassung">
