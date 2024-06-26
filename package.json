@@ -1,0 +1,13 @@
+{
+    "scripts": {
+        "test": "jest"
+    },
+    "jest": {
+        "testMatch": [
+            "**/tests/**/*.test.js"
+        ]
+    },
+    "dependencies": {
+        "jsdom": "^24.1.0"
+    }
+}
