@@ -51,6 +51,7 @@ jobs:
       - name: Build release
         run: |
           echo "Building release ${BASE_NAME}-$VERSION"
+          chmod +x scripts/build.sh
           scripts/build.sh ${BASE_NAME} $VERSION
           echo "Built release ${BASE_NAME}-$VERSION"
 
