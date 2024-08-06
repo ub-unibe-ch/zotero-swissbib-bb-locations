@@ -78,6 +78,7 @@ jobs:
           if ! git diff-index --quiet HEAD -- "$UPDATE_JSON_FILE" "$UPDATE_RDF_FILE"; then
               git commit -m "Update $UPDATE_JSON_FILE and $UPDATE_RDF_FILE"
           fi
+          git push
         
       - name: Get release notes
         run: |
