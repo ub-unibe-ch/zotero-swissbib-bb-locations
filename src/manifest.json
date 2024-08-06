@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Swisscovery UB Bern Locations",
-  "version": "0.2.12",
+  "version": "\u001b[A\u001b[B",
   "description": "Zotero/Jurism-Plugin zur Bestandsabfrage im Swisscovery UB Bern",
   "author": "Denis Maier",
   "icons": {
