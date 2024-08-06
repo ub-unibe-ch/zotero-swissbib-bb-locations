@@ -1,7 +1,5 @@
 # Änderungen
 
-## v0.2.11.1
-- Wechsel zu Linux Zeilenenden (LF) wegen Build Workflow
 
 ## v0.2.11
 - Kompatibilität mit Zotero 6 und 7 (Legacy-Code eingefroren und wird in einer der kommenden Versionen entfernt; neue Features nur noch in der Zotero 7 Codebase).
