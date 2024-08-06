@@ -5,7 +5,7 @@ function log(msg) {
 }
 
 async function install() {
-	log("Installed version 0.2.11.1 of" + `'${id}'`);
+	log("Installed version 0.2.12 of" + `'${id}'`);
 }
 
 async function startup({ id, version, rootURI }) {

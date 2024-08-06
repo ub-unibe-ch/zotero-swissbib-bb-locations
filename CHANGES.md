@@ -1,6 +1,6 @@
 # Änderungen
 
-## v0.2.11.1
+## v0.2.12
 - Wechsel zu Unix Zeilenenden (LF)
 
 ## v0.2.11
