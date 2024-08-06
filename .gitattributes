@@ -1,4 +1,18 @@
 # Auto detect text files and perform LF normalization
-* text=auto
+* text=auto eol=lf
 
+*.js text eol=lf
 *.json text eol=lf
+*.rdf text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+makefile text eol=lf
+*.yml text eol=lf
+*.xul text eol=lf
+*.dtd text eol=lf
+*.flt text eol=lf
+*.manifest text eol=lf
+*.xhtml text eol=lf
+*.env text eol=lf
+LICENSE text eol=lf
+
