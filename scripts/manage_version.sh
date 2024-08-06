@@ -29,6 +29,11 @@ if [ "$current" != "$version" ]; then
     git add "$MANIFEST_JSON" "$INSTALL_RDF"
     git commit -m "bump version to $version"
 
+    # Normalize line endings
+    git rm -rf --cached .
+    git reset --hard HEAD
+    git commit -m "Normalize all the line endings"
+
 else
     echo "Version number has not changed. No updates made."
 fi
