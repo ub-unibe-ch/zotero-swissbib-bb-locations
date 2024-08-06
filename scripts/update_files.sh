@@ -8,7 +8,7 @@ export $(grep -v '^#' .env | xargs)
 
 echo "Updating update manifests for $BASE_NAME-$VERSION"
 
-updatelink="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${VERSION}/${BASE_NAME}-${VERSION}.xpi"
+updatelink="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/v${VERSION}/${BASE_NAME}-${VERSION}.xpi"
 update_hash="sha256:$(shasum -a 256 "${BUILD_DIR}/${BASE_NAME}-${VERSION}.xpi" | cut -d' ' -f1)"
 
 jq --arg version "$VERSION" \
