@@ -5,7 +5,7 @@
         {
           "version": "0.2.12",
           "update_link": "https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/v0.2.12/zotero-swisscovery-ubbern-locations-0.2.12.xpi",
-          "update_hash": "sha256:2e21b896ab45493ab4ed4788acc0f3718870bfcdb46964a7d224449f88b36bb6",
+          "update_hash": "sha256:4c14f088cc2f4fbcf047e30570c7f5f335ac14e6967c7e80aae4e69c417f3cb9",
           "applications": {
             "gecko": {
               "strict_min_version": "60.0"
