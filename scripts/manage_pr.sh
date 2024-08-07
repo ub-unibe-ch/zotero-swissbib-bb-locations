@@ -10,8 +10,14 @@ export $(grep -v '^#' .env | xargs)
 # Normalize line endings to LF
 git rm -rf --cached .
 git reset --hard HEAD
-git commit -m "Normalize all the line endings"
-git push --set-upstream origin $branch
+
+# Add all changes to the staging area
+git add -A
+
+# Check if there are any changes to be committed
+if ! git diff-index --quiet HEAD --; then
+    git commit -m "Committing all changes"
+fi
 
 # Automatically determine the branch name
 branch=$(git rev-parse --abbrev-ref HEAD)
