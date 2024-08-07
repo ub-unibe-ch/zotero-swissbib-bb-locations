@@ -1,6 +1,6 @@
 # Makefile
 
-.PHONY: help release check-tools version phony update-files pr clean
+.PHONY: help release checks version phony update-files pr clean
 
 # Helper to source .env and get variables
 GET_VAR = ./scripts/get_env_var.sh
@@ -52,12 +52,13 @@ $(BUILD_DIR)/$(BASE_NAME)-$(call get_version).xpi: $(wildcard src/*) $(MANIFEST_
 
 version: $(MANIFEST_JSON)
 
-$(MANIFEST_JSON): check-tools
+$(MANIFEST_JSON): checks
 	./scripts/manage_version.sh
 	$(eval VERSION := $(call get_version))
 	$(eval export VERSION)	
 	
-check-tools:
+checks:
+	./scripts/check_changes.sh
 	./scripts/check_tools.sh
 
 clean:
