@@ -11,6 +11,7 @@ export $(grep -v '^#' .env | xargs)
 git rm -rf --cached .
 git reset --hard HEAD
 git commit -m "Normalize all the line endings"
+git push --set-upstream origin $branch
 
 # Automatically determine the branch name
 branch=$(git rev-parse --abbrev-ref HEAD)
