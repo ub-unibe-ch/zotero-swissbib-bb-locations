@@ -1,6 +1,6 @@
 # Makefile
 
-.PHONY: all check-tools version phony update-files pr clean
+.PHONY: help release check-tools version phony update-files pr clean
 
 # Helper to source .env and get variables
 GET_VAR = ./scripts/get_env_var.sh
@@ -30,10 +30,12 @@ export VERSION
 #########################
 
 # Default Target
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL := help
 
 # Define dependencies
-all: pr
+
+release: build
+	./scripts/release.sh $(BASE_NAME) $(call get_version)
 
 pr: update-files
 	./scripts/manage_pr.sh
@@ -60,3 +62,11 @@ check-tools:
 
 clean:
 	rm -f $(BUILD_DIR)/*.xpi
+
+help:
+	@echo "No target specified."
+	@echo "Usage:"
+	@echo "  help    - Show help"
+	@echo "  pr      - PR workflow"
+	@echo "  release - Release workflow"
+	@echo "  clean   - Cleanup"
