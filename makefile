@@ -34,7 +34,7 @@ export VERSION
 
 # Define dependencies
 
-release: build
+release:
 	./scripts/release.sh $(BASE_NAME) $(call get_version)
 
 pr: update-files
