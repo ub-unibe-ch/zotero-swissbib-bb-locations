@@ -33,7 +33,7 @@ echo "Extracted release notes from ${CHANGELOG}"
 
 # Create release
 echo "Creating release $VERSION"
-# gh release create v${VERSION} ${BUILD_DIR}/${BASE_NAME}-${VERSION}.xpi -t "v${VERSION}" --notes-file release-notes-${VERSION}.md
+gh release create v${VERSION} ${BUILD_DIR}/${BASE_NAME}-${VERSION}.xpi -t "v${VERSION}" --notes-file release-notes-${VERSION}.md
 echo "Created release $VERSION"
 
 # Cleanup
