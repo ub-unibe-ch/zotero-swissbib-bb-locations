@@ -26,9 +26,8 @@ if [ "$current" != "$version" ]; then
     perl -pi -e "s/em:version=\"[^\"]*\"/em:version=\"$version\"/" "$INSTALL_RDF"
     
     # Commit changes if any
-    git add "$MANIFEST_JSON" #"$INSTALL_RDF"
+    git add "$MANIFEST_JSON" "$INSTALL_RDF"
     git commit -m "bump version to $version"
-
 else
     echo "Version number has not changed. No updates made."
 fi
