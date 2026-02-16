@@ -44,11 +44,13 @@ export default defineConfig({
     assets: ["addon"],
     hooks: {
       "build:done": async (ctx) => {
-        // Copy update.json to root directory
-        await fse.copy(
-          `.scaffold/build/update.json`,
-          `updates.json`
-        );
+        // Copy update.json to root directory (only in production)
+        if (process.env.NODE_ENV === "production") {
+          await fse.copy(
+            `.scaffold/build/update.json`,
+            `updates.json`
+          );
+        }
       },
     },
     define: {
