@@ -20,7 +20,7 @@ async function startup({ id, version, rootURI }) {
 		// register preference pane
 		Zotero.PreferencePanes.register({
 			pluginID: 'zoteroswisscoveryubbernlocations@ubbe.org',
-			src: rootURI + 'prefs.xhtml',
+			src: rootURI + 'content/prefs.xhtml',
 			//scripts: [rootURI + 'preferences.js'],
 		});
 		
