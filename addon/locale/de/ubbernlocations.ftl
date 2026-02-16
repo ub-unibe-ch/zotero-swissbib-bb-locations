@@ -1,17 +1,17 @@
-sul-itemmenu-submenu = 
+itemmenu-submenu =
     .label = Swisscovery UB Bern Standortabfrage
 
-sul-itemmenu-submenu-locationlookup = 
+itemmenu-locationlookup =
     .label = Standorte abfragen
 
-sul-itemmenu-submenu-orderNoteToAbstract = 
+itemmenu-orderNoteToAbstract =
     .label = Bestellnotiz eintragen
 
-sul-preferences-abstractNote =
+preferences-abstractNote =
     .label = Abstract
 
-sul-preferences-extra =
+preferences-extra =
     .label = Extra
 
-sul-preferences-apiKey =
+preferences-apiKey =
     .label = Api-Key für Alma

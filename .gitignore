@@ -2,3 +2,13 @@ build/
 .project
 *.xpi
 node_modules/
+
+# Zotero plugin scaffold
+.scaffold/
+typings/
+
+# Environment variables (local paths, secrets)
+.env
+
+# Reference/template directories
+zotero-plugin-template/

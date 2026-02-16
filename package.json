@@ -1,5 +1,31 @@
 {
+    "version": "0.2.13",
+    "description": "Zotero/Jurism-Plugin zur Bestandsabfrage im Swisscovery UB Bern",
+
+    "config": {
+    "addonName": "Swisscovery UB Bern Locations",
+    "addonID": "zoteroswisscoveryubbernlocations@ubbe.org",
+    "addonRef": "zoteroswisscoveryubbernlocations",
+    "addonInstance": "ZoteroSwisscoveryUbbernLocations",
+    "prefsPrefix": "extensions.zotero.swisscoveryubbernlocations"
+    },
+
+    "author": "Denis Maier",
+
+    "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations.git"
+    },
+
+     "bugs": {
+        "url": "https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/issues"
+    },
+    "homepage": "https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations",
+    
     "scripts": {
+        "start": "zotero-plugin serve",
+        "build": "zotero-plugin build",
+        "release": "zotero-plugin release",
         "test": "jest"
     },
     "jest": {
@@ -9,5 +35,9 @@
     },
     "dependencies": {
         "jsdom": "^24.1.0"
+    },
+    "devDependencies": {
+        "jest": "^30.2.0",
+        "zotero-plugin-scaffold": "^0.8.3"
     }
 }

@@ -3,15 +3,13 @@
     "zoteroswisscoveryubbernlocations@ubbe.org": {
       "updates": [
         {
-          "version": "0.2.12",
-          "update_link": "https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/v0.2.12/zotero-swisscovery-ubbern-locations-0.2.12.xpi",
-          "update_hash": "sha256:edc2ea7c14ed4bf5fcd50e16c2b43bfda847b3e99980b672a1984d475fb7f5a4",
+          "version": "0.2.13",
+          "update_link": "https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/v0.2.13/zotero-swisscovery-ubbern-locations-0.2.13.xpi",
+          "update_hash": "sha512:9185b01143ce705d2aad0e1df7ae24c50021593b9b761be6c1bcf3f68e0ceaf89b8692008f37d9df69a1deaf59b861ca5738586b4378d4fcb2486903fba27f00",
           "applications": {
-            "gecko": {
-              "strict_min_version": "60.0"
-            },
             "zotero": {
-              "strict_min_version": "6.999"
+              "strict_min_version": "6.999",
+              "strict_max_version": "8.*"
             }
           }
         }
