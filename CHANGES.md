@@ -1,6 +1,6 @@
 # Änderungen
 
-## v0.2.13
+## v0.3.0
 - Zotero 8 Kompatibilität
 - Migration zu zotero-plugin-scaffold
 - Neue Build-Config mit TypeScript Hooks
