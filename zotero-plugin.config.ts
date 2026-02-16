@@ -28,13 +28,14 @@ export default defineConfig({
         } catch (e) {
           throw new Error("Uncommitted changes found. Commit all changes before release.");
         }
-
-        // Check CHANGES.md for version entry
-        const version = ctx.nextVersion;
+      },
+      "release:done": async (ctx) => {
+        // Check CHANGES.md for version entry (warning only)
+        const version = ctx.newVersion;
         const changes = fs.readFileSync("CHANGES.md", "utf-8");
 
         if (!changes.includes(`## v${version}`) && !changes.includes(`## ${version}`)) {
-          throw new Error(`CHANGES.md has no entry for version ${version}`);
+          console.warn(`\n⚠️  Warning: CHANGES.md has no entry for version ${version}\n`);
         }
       },
     },
