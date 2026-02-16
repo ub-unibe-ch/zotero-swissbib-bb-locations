@@ -31,7 +31,7 @@ export default defineConfig({
       },
       "release:done": async (ctx) => {
         // Check CHANGES.md for version entry (warning only)
-        const version = ctx.newVersion;
+        const version = ctx.version;
         const changes = fs.readFileSync("CHANGES.md", "utf-8");
 
         if (!changes.includes(`## v${version}`) && !changes.includes(`## ${version}`)) {
