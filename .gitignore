@@ -12,3 +12,4 @@ typings/
 
 # Reference/template directories
 zotero-plugin-template/
+.claude/
