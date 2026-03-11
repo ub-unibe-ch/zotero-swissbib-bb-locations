@@ -16,7 +16,7 @@ export default defineConfig({
 
   xpiName: `zotero-swisscovery-ubbern-locations-${pkg.version}`,
 
-  updateURL: `https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/v{{version}}/update.json`,
+  updateURL: `https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/release/update.json`,
   xpiDownloadLink: `https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/v{{version}}/zotero-swisscovery-ubbern-locations-{{version}}.xpi`,
 
   release: {
@@ -43,17 +43,6 @@ export default defineConfig({
 
   build: {
     assets: ["addon"],
-    hooks: {
-      "build:done": async (ctx) => {
-        // Copy update.json to root directory (only in production)
-        if (process.env.NODE_ENV === "production") {
-          await fse.copy(
-            `.scaffold/build/update.json`,
-            `update.json`
-          );
-        }
-      },
-    },
     define: {
       ...pkg.config,
       author: pkg.author,

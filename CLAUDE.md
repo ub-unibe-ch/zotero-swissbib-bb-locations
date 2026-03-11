@@ -68,3 +68,29 @@ Preferences are stored under `extensions.zotero.swisscoveryubbernlocations.` pre
 - `sruurl` - SRU endpoint URL
 - `apikey` - ALMA API key for loan conditions
 - `targetField` - Field for holdings output (default: extra/abstract)
+
+## Release Workflow
+
+Manual, controlled release process with GitHub PRs and auto-updates via `update.json`:
+
+1. **Development**: Work in feature branch, update `package.json` version
+2. **PR & Merge**: Create pull request, merge to main branch
+3. **Release locally**:
+   ```bash
+   git checkout main && git pull
+   pnpm run make-release  # Tag + Build + GitHub Release (XPI)
+   pnpm run publish       # update.json für Auto-Updates
+   ```
+
+The `make-release` script handles:
+- Git tag creation (`v{version}`) and push
+- Build execution
+- GitHub release `v{version}` with XPI asset
+
+The `publish` script uploads `update.json` to the `release` GitHub release for auto-updates.
+
+**Optional**: Use `pnpm run bump [patch|minor|major]` in the feature branch before merging to increment version automatically.
+
+**Prerequisites**:
+- No uncommitted changes
+- GitHub CLI authenticated (`gh auth login`)

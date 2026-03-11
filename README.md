@@ -70,28 +70,24 @@ Durch die Zuordnung der wichtigsten Tags auf die Tasten 1-9 kann man sehr effizi
    # oder npm test
    ```
 
-5. Changelog manuell aktualisieren:
+5. Changelog manuell aktualisieren (CHANGES.md):
    ```markdown
    ## vX.Y.Z (YYYY-MM-DD)
    - Änderungen hier eintragen
    ```
 
-6. Release erstellen:
+6. Release erstellen (dreistufig):
    ```bash
-   pnpm run release
-   ```
-   Aktualisiert die Versionsnummer in `package.json`.
+   # Im feature branch vor dem Merge:
+   pnpm run bump         # Version bump (patch/minor/major)
 
-7. Build für Release:
-   ```bash
-   pnpm run build
+   # Nach Merge nach main:
+   git checkout main && git pull
+   pnpm run make-release # Tag + Build + GitHub Release
+   pnpm run publish      # update.json für Auto-Updates
    ```
-   Erstellt das Plugin im `.scaffold/build/addon/` Verzeichnis.
 
-8. Commit:
-   ```bash
-   git add . && git commit -m "chore(publish): release vX.Y.Z"
-   ```
+   **Hinweis:** `bump` ist optional — die Version kann auch manuell in `package.json` geändert werden.
 
 ## License
 

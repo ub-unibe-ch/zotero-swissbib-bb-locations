@@ -26,6 +26,11 @@
         "start": "zotero-plugin serve",
         "build": "zotero-plugin build",
         "release": "zotero-plugin release",
+        "bump": "bumpp --commit \"chore(publish): release v%s\" --no-tag",
+        "make-release": "node scripts/make-release.mjs",
+        "make-release:force": "node scripts/make-release.mjs --force",
+        "make-release:dry": "node scripts/make-release.mjs --dry-run",
+        "publish": "node scripts/publish.mjs",
         "test": "jest"
     },
     "jest": {
@@ -37,6 +42,7 @@
         "jsdom": "^24.1.0"
     },
     "devDependencies": {
+        "bumpp": "^10.4.1",
         "jest": "^30.2.0",
         "zotero-plugin-scaffold": "^0.8.3"
     }
