@@ -126,7 +126,7 @@ SUL = {
     for (const id of this.addedElementIDs) {
       doc.getElementById(id)?.remove();
     }
-    doc.querySelector('[href="zoteroswisscoveryubbernlocations-ubbernlocations.ftl"]').remove();
+    doc.querySelector('[href="zoteroswisscoveryubbernlocations-ubbernlocations.ftl"]')?.remove();
   },
 
   removeFromAllWindows() {
