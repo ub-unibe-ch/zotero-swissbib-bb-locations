@@ -49,7 +49,7 @@ export default defineConfig({
         if (process.env.NODE_ENV === "production") {
           await fse.copy(
             `.scaffold/build/update.json`,
-            `updates.json`
+            `update.json`
           );
         }
       },
