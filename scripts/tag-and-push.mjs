@@ -89,26 +89,20 @@ confirm().then((proceed) => {
   try {
     if (dryRun) {
       console.log(`Would execute:`);
-      if (force) console.log(`  git push origin :refs/tags/${tag}  # delete remote tag`);
-      console.log(`  git tag -d ${tag}  # delete local tag`);
-      console.log(`  git tag -a ${tag} -m "Release ${tag}"`);
-      console.log(`  git push origin ${tag}\n`);
-    } else {
-      // Delete existing tag if --force
       if (force) {
-        try {
-          execSync(`git push origin :refs/tags/${tag}`, { stdio: 'inherit' });
-          console.log(`🗑️  Deleted remote tag ${tag}`);
-        } catch {
-          // Remote tag might not exist, ignore
-        }
-        execSync(`git tag -d ${tag}`, { stdio: 'inherit' });
-        console.log(`🗑️  Deleted local tag ${tag}\n`);
+        console.log(`  git tag -f -a ${tag} -m "Release ${tag}"`);
+        console.log(`  git push origin ${tag} --force`);
+      } else {
+        console.log(`  git tag -a ${tag} -m "Release ${tag}"`);
+        console.log(`  git push origin ${tag}`);
       }
+    } else {
+      const tagCmd = force ? `git tag -f -a ${tag} -m "Release ${tag}"` : `git tag -a ${tag} -m "Release ${tag}"`;
+      const pushCmd = force ? `git push origin ${tag} --force` : `git push origin ${tag}`;
 
-      execSync(`git tag -a ${tag} -m "Release ${tag}"`, { stdio: 'inherit' });
+      execSync(tagCmd, { stdio: 'inherit' });
       console.log(`\n✅ Tag ${tag} created`);
-      execSync(`git push origin ${tag}`, { stdio: 'inherit' });
+      execSync(pushCmd, { stdio: 'inherit' });
       console.log(`✅ Tag ${tag} pushed - CI will release now\n`);
     }
   } catch (error) {
