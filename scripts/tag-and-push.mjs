@@ -37,17 +37,40 @@ console.log(`🏷️  Tag: ${tag}`);
 if (dryRun) console.log(`\n⚠️  DRY RUN - no changes will be made\n`);
 
 // Check if tag already exists (only error if not --force)
+let localExists = false;
+let remoteExists = false;
+
 try {
   const existing = execSync(`git tag -l ${tag}`, { encoding: 'utf-8' });
-  if (existing.trim() && !force) {
-    console.error(`❌ Tag ${tag} already exists locally. Use --force to overwrite.\n`);
-    process.exit(1);
-  }
-  if (existing.trim() && force) {
-    console.log(`⚠️  Tag ${tag} exists - will overwrite\n`);
-  }
+  localExists = !!existing.trim();
 } catch {
   // Ignore error
+}
+
+try {
+  const remoteTag = execSync(`git ls-remote --tags origin refs/tags/${tag}`, { encoding: 'utf-8' });
+  remoteExists = !!remoteTag.trim();
+} catch {
+  // Ignore error
+}
+
+if (localExists && remoteExists && !force) {
+  console.error(`❌ Tag ${tag} exists locally and on remote. Use --force to overwrite.\n`);
+  process.exit(1);
+}
+
+if (remoteExists && !localExists && !force) {
+  console.error(`❌ Tag ${tag} exists on remote but not locally. Use --force to overwrite.\n`);
+  process.exit(1);
+}
+
+if (localExists && !remoteExists && !force) {
+  console.error(`❌ Tag ${tag} exists locally but not on remote. Use --force to overwrite.\n`);
+  process.exit(1);
+}
+
+if ((localExists || remoteExists) && force) {
+  console.log(`⚠️  Tag ${tag} exists - will overwrite\n`);
 }
 
 // Check CHANGES.md for version entry (unless --skip-changelog)
