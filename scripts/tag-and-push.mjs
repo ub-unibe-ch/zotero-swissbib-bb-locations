@@ -44,7 +44,7 @@ try {
     process.exit(1);
   }
   if (existing.trim() && force) {
-    console.log(`⚠️  Tag ${tag} exists - will delete and recreate\n`);
+    console.log(`⚠️  Tag ${tag} exists - will overwrite\n`);
   }
 } catch {
   // Ignore error
