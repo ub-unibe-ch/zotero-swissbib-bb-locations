@@ -65,7 +65,7 @@ if (!skipChangelog) {
   console.log(`✅ Changelog entry found\n`);
 }
 
-const confirm = autoYes || (() => {
+async function askUser() {
   return new Promise((resolve) => {
     const rl = readline.createInterface({
       input: process.stdin,
@@ -77,14 +77,15 @@ const confirm = autoYes || (() => {
       resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
     });
   });
-});
+}
 
-confirm().then((proceed) => {
+async function main() {
+  const proceed = autoYes || await askUser();
+
   if (!proceed) {
     console.log('\n❌ Cancelled\n');
     process.exit(0);
   }
-
 
   try {
     if (dryRun) {
@@ -109,4 +110,6 @@ confirm().then((proceed) => {
     console.error(`\n❌ Error: ${error.message}\n`);
     process.exit(1);
   }
-});
+}
+
+main();
