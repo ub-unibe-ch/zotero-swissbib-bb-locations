@@ -88,23 +88,32 @@ async function main() {
   }
 
   try {
-    if (dryRun) {
-      console.log(`Would execute:`);
-      if (force) {
-        console.log(`  git tag -f -a ${tag} -m "Release ${tag}"`);
-        console.log(`  git push origin ${tag} --force`);
-      } else {
-        console.log(`  git tag -a ${tag} -m "Release ${tag}"`);
-        console.log(`  git push origin ${tag}`);
-      }
-    } else {
-      const tagCmd = force ? `git tag -f -a ${tag} -m "Release ${tag}"` : `git tag -a ${tag} -m "Release ${tag}"`;
-      const pushCmd = force ? `git push origin ${tag} --force` : `git push origin ${tag}`;
+    const tagCmd = force ? `git tag -f -a ${tag} -m "Release ${tag}"` : `git tag -a ${tag} -m "Release ${tag}"`;
+    const pushCmd = force ? `git push origin ${tag} --force` : `git push origin ${tag}`;
 
-      execSync(tagCmd, { stdio: 'inherit' });
-      console.log(`\n✅ Tag ${tag} created`);
-      execSync(pushCmd, { stdio: 'inherit' });
+    function runOrLog(label, cmd, indent = false) {
+      if (dryRun) {
+        console.log(`  ${label}`);
+        if (indent) console.log(`    ${cmd}`);
+      } else {
+        console.log(`${label}`);
+        execSync(cmd, { stdio: 'inherit' });
+      }
+      if (dryRun) console.log();  // newline between steps in dry-run
+    }
+
+    if (dryRun) {
+      console.log(`Would execute:\n`);
+    }
+
+    runOrLog(`[1/2] Create tag:`, tagCmd, dryRun);
+    if (!dryRun) console.log(`✅ Tag ${tag} created\n`);
+
+    runOrLog(`[2/2] Push to remote:`, pushCmd, dryRun);
+    if (!dryRun) {
       console.log(`✅ Tag ${tag} pushed - CI will release now\n`);
+    } else {
+      console.log(`\n✅ Dry run complete - no changes made\n`);
     }
   } catch (error) {
     console.error(`\n❌ Error: ${error.message}\n`);
