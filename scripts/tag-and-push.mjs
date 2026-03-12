@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'fs';
 import readline from 'readline';
+import { execSync } from 'child_process';
 
 const args = process.argv.slice(2);
 const force = args.includes('--force');
@@ -37,7 +38,7 @@ if (dryRun) console.log(`\n⚠️  DRY RUN - no changes will be made\n`);
 
 // Check if tag already exists (only error if not --force)
 try {
-  const existing = require('child_process').execSync(`git tag -l ${tag}`, { encoding: 'utf-8' });
+  const existing = execSync(`git tag -l ${tag}`, { encoding: 'utf-8' });
   if (existing.trim() && !force) {
     console.error(`❌ Tag ${tag} already exists locally. Use --force to overwrite.\n`);
     process.exit(1);
@@ -84,7 +85,6 @@ confirm().then((proceed) => {
     process.exit(0);
   }
 
-  const { execSync } = require('child_process');
 
   try {
     if (dryRun) {
