@@ -1,8 +1,0 @@
-content zoteroswisscoveryubbernlocations chrome/content/
-
-overlay chrome://zotero/content/zoteroPane.xul chrome://zoteroswisscoveryubbernlocations/content/overlay.xul
-
-locale  zoteroswisscoveryubbernlocations  en-US   chrome/locale/en-US/
-locale  zoteroswisscoveryubbernlocations  de   chrome/locale/de/
-
-skin    zoteroswisscoveryubbernlocations  default chrome/skin/default/zoteroswisscoveryubbernlocations/

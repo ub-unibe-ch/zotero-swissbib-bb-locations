@@ -50,19 +50,47 @@ Durch die Zuordnung der wichtigsten Tags auf die Tasten 1-9 kann man sehr effizi
 ## Entwicklung
 
 1. Repository klonen oder forken.
-2. Einrichtung der Entwicklungsumgebung:
-   - Befolgen Sie die Anweisungen zur [Einrichtung der Entwicklungsumgebung](https://www.zotero.org/support/dev/client_coding/plugin_development#setting_up_a_plugin_development_environment) und verwenden Sie die [Firefox Developer Tools](https://www.zotero.org/support/dev/zotero_7_for_developers#using_the_firefox_developer_tools).
 
-3. Entwicklung in einem Branch.
-4. Tests:
-   - Führen Sie Tests mit `npm test` durch (vorausgesetzt `node` und `jest` sind installiert).
-   - Passen Sie bestehende Tests an und erstellen Sie neue Tests, falls erforderlich.
+2. Abhängigkeiten installieren:
+   ```bash
+   npm install
+   # oder pnpm install
+   ```
 
-5. Release-Workflow:
-   - Der Befehl `make` führt den Release-Workflow aus.
+3. Entwicklung mit Hot Reload:
+   ```bash
+   pnpm run start
+   # oder npm start
+   ```
+   Startet den Entwicklungsserver mit automatischem Neuladen bei Änderungen.
+
+4. Tests durchführen:
+   ```bash
+   pnpm run test
+   # oder npm test
+   ```
+
+5. Changelog manuell aktualisieren (CHANGES.md):
+   ```markdown
+   ## vX.Y.Z (YYYY-MM-DD)
+   - Änderungen hier eintragen
+   ```
+
+6. Release erstellen (dreistufig):
+   ```bash
+   # Im feature branch vor dem Merge:
+   pnpm run bump         # Version bump (patch/minor/major)
+
+   # Nach Merge nach main:
+   git checkout main && git pull
+   pnpm run make-release # Tag + Build + GitHub Release
+   pnpm run publish      # update.json für Auto-Updates
+   ```
+
+   **Hinweis:** `bump` ist optional — die Version kann auch manuell in `package.json` geändert werden.
 
 ## License
 
-Copyright (C) 2019--2024 Denis Maier
+Copyright (C) 2019--2026 Denis Maier
 
 Distributed under the GPLv3 License.

@@ -1,3 +1,18 @@
+// Preference utility wrapper
+const PREFS_PREFIX = "extensions.zotero.swisscoveryubbernlocations.";
+
+const Pref = {
+  get(key) {
+    return Zotero.Prefs.get(PREFS_PREFIX + key, true);
+  },
+  set(key, value) {
+    Zotero.Prefs.set(PREFS_PREFIX + key, value, true);
+  },
+  get sruurl() { return this.get("sruurl"); },
+  get apikey() { return this.get("apikey"); },
+  get targetField() { return this.get("targetField"); },
+};
+
 SUL = {
   id: null,
   version: null,
@@ -13,9 +28,15 @@ SUL = {
     this.initialized = true;
   },
 
-  sruPrefix: Zotero.Prefs.get("extensions.sul.sruurl", true),
-  apiKey: Zotero.Prefs.get("extensions.sul.apikey", true),
-  targetField: Zotero.Prefs.get("extensions.sul.targetField", true),
+  get sruPrefix() {
+    return Pref.sruurl;
+  },
+  get apiKey() {
+    return Pref.apikey;
+  },
+  get targetField() {
+    return Pref.targetField;
+  },
 
   kurierbibliothekenUBBe: [
     "B400", "B452", "B465", "B500", "B555", "B404", "B410", "B415", "B410",
@@ -44,15 +65,15 @@ SUL = {
     let doc = window.document;
 
     // Use Fluent for localization
-    window.MozXULElement.insertFTLIfNeeded("ubbernlocations.ftl");
+    window.MozXULElement.insertFTLIfNeeded("zoteroswisscoveryubbernlocations-ubbernlocations.ftl");
 
     // Add a submenu to the item menu
     this.submenu = doc.createXULElement("menu");
     this.submenu.id = "SUL_submenu";
     this.submenu.setAttribute("type", "menu");
     this.submenu.setAttribute("class", "menuitem-iconic");
-    this.submenu.setAttribute("image", this.rootURI + "glass_48.png");
-    this.submenu.setAttribute("data-l10n-id", "sul-itemmenu-submenu");
+    this.submenu.setAttribute("image", this.rootURI + "content/icons/glass_48.png");
+    this.submenu.setAttribute("data-l10n-id", "zoteroswisscoveryubbernlocations-itemmenu-submenu");
     doc.getElementById("zotero-itemmenu").appendChild(this.submenu);
     this.storeAddedElement(this.submenu);
 
@@ -64,13 +85,13 @@ SUL = {
     this.createMenuItem(doc, this.popup, {
       id: "submenuitem",
       command: this.locationLookup.LocationLookup.bind(this),
-      dataL10nId: "sul-itemmenu-submenu-locationlookup",
+      dataL10nId: "zoteroswisscoveryubbernlocations-itemmenu-locationlookup",
     });
 
     this.createMenuItem(doc, this.popup, {
       id: "submenuitem2",
       command: this.orderNote.addOrderNote.bind(this),
-      dataL10nId: "sul-itemmenu-submenu-orderNoteToAbstract",
+      dataL10nId: "zoteroswisscoveryubbernlocations-itemmenu-orderNoteToAbstract",
     });
   },
 
@@ -105,7 +126,7 @@ SUL = {
     for (const id of this.addedElementIDs) {
       doc.getElementById(id)?.remove();
     }
-    doc.querySelector('[href="ubbernlocations.ftl"]').remove();
+    doc.querySelector('[href="zoteroswisscoveryubbernlocations-ubbernlocations.ftl"]')?.remove();
   },
 
   removeFromAllWindows() {
@@ -522,6 +543,15 @@ SUL = {
   },
 };
 
+// Export for Zotero (global scope)
+// In Zotero bootstrap context, 'self' or the global scope works better than 'window'
+if (typeof self !== 'undefined') {
+  self.SUL = SUL;
+}
+if (typeof window !== 'undefined') {
+  window.SUL = SUL;
+}
+// Export for Node.js/module environments (Jest tests)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = SUL;
 }

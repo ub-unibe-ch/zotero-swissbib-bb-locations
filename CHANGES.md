@@ -1,5 +1,13 @@
 # Änderungen
 
+## v0.3.0
+- Zotero 8 Kompatibilität
+- Migration zu zotero-plugin-scaffold
+- Neue Build-Config mit TypeScript Hooks
+- Automatische update.json Generierung
+- Preference Utility Wrapper
+- Bereinigung veralteter Dateien
+
 ## v0.2.12
 - Wechsel zu Unix Zeilenenden (LF)
 - Lokaler Release-Workflow
