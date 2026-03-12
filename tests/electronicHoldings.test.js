@@ -2,9 +2,9 @@ global.Zotero = {
     Prefs: {
       get: (pref, skipFallback) => {
         const prefs = {
-          "extensions.sul.sruurl": "http://example.com/sru",
-          "extensions.sul.apikey": "fake-api-key",
-          "extensions.sul.targetField": "notes",
+          "extensions.zotero.swisscoveryubbernlocations.sruurl": "http://example.com/sru",
+          "extensions.zotero.swisscoveryubbernlocations.apikey": "fake-api-key",
+          "extensions.zotero.swisscoveryubbernlocations.targetField": "notes",
         };
         return prefs[pref];
       },
