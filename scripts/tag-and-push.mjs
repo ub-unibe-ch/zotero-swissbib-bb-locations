@@ -36,6 +36,15 @@ console.log(`\n📦 Version: ${version}`);
 console.log(`🏷️  Tag: ${tag}`);
 if (dryRun) console.log(`\n⚠️  DRY RUN - no changes will be made\n`);
 
+// Verify we're on master branch
+const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' }).trim();
+if (currentBranch !== 'master') {
+  console.error(`❌ You are on branch "${currentBranch}", not "master".`);
+  console.error(`   Tags should only be created from master to ensure releases are stable.\n`);
+  process.exit(1);
+}
+console.log(`✅ On master branch\n`);
+
 // Check if tag already exists (only error if not --force)
 let localExists = false;
 let remoteExists = false;
@@ -78,7 +87,9 @@ if (!skipChangelog) {
   const changesPath = 'CHANGES.md';
   const changes = fs.readFileSync(changesPath, 'utf-8');
 
-  if (!changes.includes(`## ${tag}`) && !changes.includes(`## ${version}`)) {
+  // Strict regex match: line must start with ## followed by optional v, then exact version
+  const versionRegex = new RegExp(`^##\\s+v?\\b${version.replace(/\./g, '\\.')}\\b`, 'm');
+  if (!versionRegex.test(changes)) {
     console.error(`❌ No entry for ${tag} found in ${changesPath}`);
     console.error(`   Please add a changelog entry first (or use --skip-changelog):\n`);
     console.error(`   ## ${tag}\n`);

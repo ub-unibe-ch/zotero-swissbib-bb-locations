@@ -21,6 +21,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify tag is on master
+        run: |
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
+            echo "❌ Tag commit ${{ github.sha }} is not on master branch."
+            echo "   Releases should only be created from master."
+            exit 1
+          fi
+          echo "✅ Tag is on master"
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
