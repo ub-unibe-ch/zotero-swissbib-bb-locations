@@ -76,16 +76,21 @@ Durch die Zuordnung der wichtigsten Tags auf die Tasten 1-9 kann man sehr effizi
    - Änderungen hier eintragen
    ```
 
-6. Release erstellen (dreistufig):
+6. Release erstellen:
    ```bash
    # Im feature branch vor dem Merge:
    pnpm run bump         # Version bump (patch/minor/major)
 
-   # Nach Merge nach main:
-   git checkout main && git pull
-   pnpm run make-release # Tag + Build + GitHub Release
-   pnpm run publish      # update.json für Auto-Updates
+   # Nach Merge nach master:
+   git checkout master && git pull
+   pnpm run tag          # Tag erstellen + pushen
    ```
+
+   Der CI-Workflow erstellt dann automatisch das GitHub Release mit XPI und update.json.
+
+   **Optionen:**
+   - `pnpm run tag:dry` - Vorschau ohne Änderungen
+   - `pnpm run tag:force` - Bestehenden Tag überschreiben
 
    **Hinweis:** `bump` ist optional — die Version kann auch manuell in `package.json` geändert werden.
 

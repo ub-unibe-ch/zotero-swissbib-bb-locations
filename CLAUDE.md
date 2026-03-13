@@ -71,26 +71,28 @@ Preferences are stored under `extensions.zotero.swisscoveryubbernlocations.` pre
 
 ## Release Workflow
 
-Manual, controlled release process with GitHub PRs and auto-updates via `update.json`:
+Simplified release process with GitHub Actions:
 
-1. **Development**: Work in feature branch, update `package.json` version
-2. **PR & Merge**: Create pull request, merge to main branch
-3. **Release locally**:
+1. **Development**: Work in feature branch, bump version with `pnpm run bump`
+2. **PR & Merge**: Create pull request, merge to master branch
+3. **Tag & Release**:
    ```bash
-   git checkout main && git pull
-   pnpm run make-release  # Tag + Build + GitHub Release (XPI)
-   pnpm run publish       # update.json für Auto-Updates
+   git checkout master && git pull
+   pnpm run tag          # Creates tag v{version} and pushes to GitHub
    ```
 
-The `make-release` script handles:
-- Git tag creation (`v{version}`) and push
+The GitHub Actions workflow (triggered by tag `v*`) handles:
 - Build execution
 - GitHub release `v{version}` with XPI asset
+- Upload of `update.json` to `release` tag for auto-updates
 
-The `publish` script uploads `update.json` to the `release` GitHub release for auto-updates.
+**Tag script options:**
+- `pnpm run tag:dry` - Preview without making changes
+- `pnpm run tag:force` - Overwrite existing tag
 
-**Optional**: Use `pnpm run bump [patch|minor|major]` in the feature branch before merging to increment version automatically.
+**Legacy local release scripts** (backup, use only if CI fails):
+- `pnpm run make-local-release` - Full local release (tag + build + GitHub release)
+- `pnpm run publish` - Upload update.json only
 
-**Prerequisites**:
-- No uncommitted changes
+**Prerequisites for local scripts**:
 - GitHub CLI authenticated (`gh auth login`)
