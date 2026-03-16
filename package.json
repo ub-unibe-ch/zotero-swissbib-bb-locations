@@ -27,9 +27,12 @@
         "build": "zotero-plugin build",
         "release": "zotero-plugin release",
         "bump": "bumpp --commit \"chore(publish): release v%s\" --no-tag",
-        "make-release": "node scripts/make-release.mjs",
-        "make-release:force": "node scripts/make-release.mjs --force",
-        "make-release:dry": "node scripts/make-release.mjs --dry-run",
+        "tag": "node scripts/tag-and-push.mjs",
+        "tag:force": "node scripts/tag-and-push.mjs --force --yes",
+        "tag:dry": "node scripts/tag-and-push.mjs --dry-run",
+        "make-local-release": "node scripts/make-release.mjs",
+        "make-local-release:force": "node scripts/make-release.mjs --force",
+        "make-local-release:dry": "node scripts/make-release.mjs --dry-run",
         "publish": "node scripts/publish.mjs",
         "test": "jest"
     },
@@ -45,5 +48,11 @@
         "bumpp": "^10.4.1",
         "jest": "^30.2.0",
         "zotero-plugin-scaffold": "^0.8.3"
+    },
+    "pnpm": {
+        "overrides": {
+            "minimatch@3.1": "^3.1.3",
+            "minimatch@9.0": "^9.0.7"
+        }
     }
 }
