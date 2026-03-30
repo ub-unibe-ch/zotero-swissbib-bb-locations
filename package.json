@@ -7,7 +7,7 @@
     "addonID": "zoteroswisscoveryubbernlocations@ubbe.org",
     "addonRef": "zoteroswisscoveryubbernlocations",
     "addonInstance": "ZoteroSwisscoveryUbbernLocations",
-    "prefsPrefix": "extensions.zotero.swisscoveryubbernlocations"
+    "prefsPrefix": "extensions.swisscoveryubbernlocations"
     },
 
     "author": "Denis Maier",
