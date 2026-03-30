@@ -1,5 +1,8 @@
 # Änderungen
 
+## v0.3.1
+- Bugfix: Preference-Handling
+
 ## v0.3.0
 - Zotero 8 Kompatibilität
 - Migration zu zotero-plugin-scaffold
