@@ -166,31 +166,33 @@ SUL = {
         (item) => item.itemTypeID === Zotero.ItemTypes.getID("book")
       );
       SUL.log(`addOrderNote: processing ${items.length} items`);
-      for (const [i, item] of items.entries()) {
-        const title = item.getField("title");
-        const tags = item.getTags();
-        SUL.log(`addOrderNote [${i + 1}/${items.length}] "${title}": ${tags.length} tags`);
-        const { ddcs, orderCodes, budgetCode } = SUL.orderNote.extractTags(tags);
-        SUL.log(`addOrderNote [${i + 1}/${items.length}] ETAT="${budgetCode}" DDC=[${ddcs}] BC=[${orderCodes}]`);
+      await Zotero.DB.executeTransaction(async () => {
+        for (const [i, item] of items.entries()) {
+          const title = item.getField("title");
+          const tags = item.getTags();
+          SUL.log(`addOrderNote [${i + 1}/${items.length}] "${title}": ${tags.length} tags`);
+          const { ddcs, orderCodes, budgetCode } = SUL.orderNote.extractTags(tags);
+          SUL.log(`addOrderNote [${i + 1}/${items.length}] ETAT="${budgetCode}" DDC=[${ddcs}] BC=[${orderCodes}]`);
 
-        const missing = [];
-        if (!budgetCode) missing.push("ETAT");
-        if (!ddcs.length) missing.push("DDC");
+          const missing = [];
+          if (!budgetCode) missing.push("ETAT");
+          if (!ddcs.length) missing.push("DDC");
 
-        let value;
-        if (missing.length) {
-          value = `⚠ FEHLT: ${missing.join(", ")}`;
-        } else {
-          value = SUL.orderNote.constructOrderNote({ ddcs, orderCodes, budgetCode });
+          let value;
+          if (missing.length) {
+            value = `⚠ FEHLT: ${missing.join(", ")}`;
+          } else {
+            value = SUL.orderNote.constructOrderNote({ ddcs, orderCodes, budgetCode });
+          }
+          if (Pref.debug) {
+            value += ` [${new Date().toLocaleString()}]`;
+          }
+          SUL.log(`addOrderNote [${i + 1}/${items.length}] result: "${value}"`);
+
+          item.setField("volume", value);
+          await item.save();
         }
-        if (Pref.debug) {
-          value += ` [${new Date().toLocaleString()}]`;
-        }
-        SUL.log(`addOrderNote [${i + 1}/${items.length}] result: "${value}"`);
-
-        item.setField("volume", value);
-        await item.saveTx();
-      }
+      });
     },
 
     async clearOrderNotes() {
@@ -199,10 +201,12 @@ SUL = {
       const items = selectedItems.filter(
         (item) => item.itemTypeID === Zotero.ItemTypes.getID("book")
       );
-      for (const item of items) {
-        item.setField("volume", "");
-        await item.saveTx();
-      }
+      await Zotero.DB.executeTransaction(async () => {
+        for (const item of items) {
+          item.setField("volume", "");
+          await item.save();
+        }
+      });
       SUL.log(`clearOrderNotes: cleared ${items.length} items`);
     },
 
