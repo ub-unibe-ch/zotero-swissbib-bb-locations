@@ -20,6 +20,9 @@ export default defineConfig({
   xpiDownloadLink: `https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/releases/download/v{{version}}/zotero-swisscovery-ubbern-locations-{{version}}.xpi`,
 
   release: {
+    github: {
+      releaseNote: () => "See [CHANGES.md](https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/blob/master/CHANGES.md) for details.",
+    },
     hooks: {
       "release:init": async (ctx) => {
         // Check for uncommitted changes
