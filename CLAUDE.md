@@ -64,7 +64,7 @@ Without this, `bootstrap.js` cannot access `SUL` after loading the script.
 
 ## Key Configuration
 
-Preferences are stored under `extensions.zotero.swisscoveryubbernlocations.` prefix:
+Preferences are stored under `extensions.swisscoveryubbernlocations.` prefix (read via `Zotero.Prefs.get(key, true)`):
 - `sruurl` - SRU endpoint URL
 - `apikey` - ALMA API key for loan conditions
 - `targetField` - Field for holdings output (default: extra/abstract)

@@ -1,5 +1,5 @@
 {
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "Zotero/Jurism-Plugin zur Bestandsabfrage im Swisscovery UB Bern",
 
     "config": {
@@ -7,7 +7,7 @@
     "addonID": "zoteroswisscoveryubbernlocations@ubbe.org",
     "addonRef": "zoteroswisscoveryubbernlocations",
     "addonInstance": "ZoteroSwisscoveryUbbernLocations",
-    "prefsPrefix": "extensions.zotero.swisscoveryubbernlocations"
+    "prefsPrefix": "extensions.swisscoveryubbernlocations"
     },
 
     "author": "Denis Maier",

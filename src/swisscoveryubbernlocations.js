@@ -1,5 +1,5 @@
 // Preference utility wrapper
-const PREFS_PREFIX = "extensions.zotero.swisscoveryubbernlocations.";
+const PREFS_PREFIX = "extensions.swisscoveryubbernlocations.";
 
 const Pref = {
   get(key) {
