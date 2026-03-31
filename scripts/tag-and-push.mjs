@@ -88,7 +88,7 @@ if (!skipChangelog) {
   const changes = fs.readFileSync(changesPath, 'utf-8');
 
   // Strict regex match: line must start with ## followed by optional v, then exact version
-  const versionRegex = new RegExp(`^##\\s+v?\\b${version.replace(/\./g, '\\.')}\\b`, 'm');
+  const versionRegex = new RegExp(`^##\\s+v?${version.replace(/\./g, '\\.')}\\b`, 'm');
   if (!versionRegex.test(changes)) {
     console.error(`❌ No entry for ${tag} found in ${changesPath}`);
     console.error(`   Please add a changelog entry first (or use --skip-changelog):\n`);
