@@ -6,6 +6,13 @@ import fs from "fs";
 
 
 
+// Parse prefs.js to extract default values for build-time injection
+const prefsContent = fs.readFileSync("addon/prefs.js", "utf-8");
+const prefDefaults: Record<string, string> = {};
+for (const m of prefsContent.matchAll(/pref\("(\w+)",\s*"([^"]*)"\)/g)) {
+  prefDefaults[m[1]] = m[2];
+}
+
 export default defineConfig({
   dist: ".scaffold/build",
   source: ["src", "addon"],
@@ -63,6 +70,7 @@ export default defineConfig({
         entryPoints: ["src/swisscoveryubbernlocations.js"],
         define: {
           __env__: `"${process.env.NODE_ENV}"`,
+          __PREF_DEFAULTS__: JSON.stringify(prefDefaults),
         },
         bundle: true,
         target: "firefox115",
