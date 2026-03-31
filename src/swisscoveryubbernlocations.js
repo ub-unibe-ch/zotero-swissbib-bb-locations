@@ -16,6 +16,7 @@ const Pref = {
   get sruurl() { return this.get("sruurl"); },
   get apikey() { return this.get("apikey"); },
   get targetField() { return this.get("targetField"); },
+  get debug() { return this.get("debug"); },
 };
 
 SUL = {
@@ -159,7 +160,10 @@ SUL = {
       for (const item of items) {
         const tags = item.getTags();
         const { ddcs, orderCodes, budgetCode } = SUL.orderNote.extractTags(tags);
-        const orderNote = SUL.orderNote.constructOrderNote({ ddcs, orderCodes, budgetCode });
+        let orderNote = SUL.orderNote.constructOrderNote({ ddcs, orderCodes, budgetCode });
+        if (Pref.debug) {
+          orderNote += ` [${new Date().toLocaleString()}]`;
+        }
         item.setField("volume", orderNote);
         await item.saveTx();
       }

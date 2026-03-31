@@ -15,3 +15,6 @@ preferences-extra =
 
 preferences-apiKey =
     .label = Api-Key für Alma
+
+preferences-debug =
+    .label = Debug-Modus (Zeitstempel an Einträge anhängen)
