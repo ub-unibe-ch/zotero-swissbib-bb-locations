@@ -94,6 +94,14 @@ SUL = {
       command: this.orderNote.addOrderNote.bind(this),
       dataL10nId: "zoteroswisscoveryubbernlocations-itemmenu-orderNoteToAbstract",
     });
+
+    if (Pref.debug) {
+      this.createMenuItem(doc, this.popup, {
+        id: "submenuitem3",
+        command: this.orderNote.clearOrderNotes.bind(this),
+        dataL10nId: "zoteroswisscoveryubbernlocations-itemmenu-clearOrderNotes",
+      });
+    }
   },
 
   createMenuItem(doc, parent, { id, command, dataL10nId }) {
@@ -162,6 +170,19 @@ SUL = {
         item.setField("volume", orderNote);
         await item.saveTx();
       }
+    },
+
+    async clearOrderNotes() {
+      const ZoteroPane = Zotero.getActiveZoteroPane();
+      const selectedItems = ZoteroPane.getSelectedItems();
+      const items = selectedItems.filter(
+        (item) => item.itemTypeID === Zotero.ItemTypes.getID("book")
+      );
+      for (const item of items) {
+        item.setField("volume", "");
+        await item.saveTx();
+      }
+      SUL.log(`clearOrderNotes: cleared ${items.length} items`);
     },
 
     extractTags(tags) {
