@@ -21,7 +21,7 @@ export default defineConfig({
 
   release: {
     github: {
-      releaseNote: () => "See [CHANGES.md](https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/blob/master/CHANGES.md) for details.",
+      releaseNote: () => `See [CHANGES.md](https://github.com/ub-unibe-ch/zotero-swissbib-bb-locations/blob/v${pkg.version}/CHANGES.md) for details.`,
     },
     hooks: {
       "release:init": async (ctx) => {
