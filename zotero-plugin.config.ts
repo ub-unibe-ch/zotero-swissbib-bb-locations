@@ -6,6 +6,42 @@ import fs from "fs";
 
 
 
+// Parse prefs.js to extract default values for build-time injection.
+// Support the primitive preference value types accepted by Zotero/Firefox
+// and fail fast on unsupported pref declarations to avoid silently building
+// with incomplete defaults.
+const prefsContent = fs.readFileSync("addon/prefs.js", "utf-8");
+const prefDefaults: Record<string, string | number | boolean> = {};
+const prefLineRegex =
+  /^\s*pref\("([^"]+)",\s*(?:"([^"]*)"|(true|false)|(-?\d+(?:\.\d+)?))\s*\);\s*$/;
+
+for (const line of prefsContent.split(/\r?\n/)) {
+  const trimmedLine = line.trim();
+
+  if (!trimmedLine || trimmedLine.startsWith("//")) {
+    continue;
+  }
+
+  const match = trimmedLine.match(prefLineRegex);
+  if (match) {
+    const [, key, stringValue, booleanValue, numberValue] = match;
+
+    if (stringValue !== undefined) {
+      prefDefaults[key] = stringValue;
+    } else if (booleanValue !== undefined) {
+      prefDefaults[key] = booleanValue === "true";
+    } else if (numberValue !== undefined) {
+      prefDefaults[key] = Number(numberValue);
+    }
+
+    continue;
+  }
+
+  if (trimmedLine.startsWith('pref("')) {
+    throw new Error(`Unsupported preference declaration in addon/prefs.js: ${trimmedLine}`);
+  }
+}
+
 export default defineConfig({
   dist: ".scaffold/build",
   source: ["src", "addon"],
@@ -66,6 +102,7 @@ export default defineConfig({
         entryPoints: ["src/swisscoveryubbernlocations.js"],
         define: {
           __env__: `"${process.env.NODE_ENV}"`,
+          "globalThis.__PREF_DEFAULTS__": JSON.stringify(prefDefaults),
         },
         bundle: true,
         target: "firefox115",

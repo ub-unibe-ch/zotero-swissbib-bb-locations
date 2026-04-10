@@ -1,5 +1,8 @@
 # Änderungen
 
+## v0.3.2
+- Bugfix: Fallback-Defaults für Preferences, wenn Zotero die Defaults aus prefs.js beim Update nicht lädt
+
 ## v0.3.1
 - Bugfix: Preference-Handling
 

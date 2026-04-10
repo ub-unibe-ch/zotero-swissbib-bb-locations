@@ -1,9 +1,14 @@
 // Preference utility wrapper
 const PREFS_PREFIX = "extensions.swisscoveryubbernlocations.";
+const DEFAULTS = globalThis.__PREF_DEFAULTS__ || {};
 
 const Pref = {
   get(key) {
-    return Zotero.Prefs.get(PREFS_PREFIX + key, true);
+    try {
+      return Zotero.Prefs.get(PREFS_PREFIX + key, true) ?? DEFAULTS[key];
+    } catch (e) {
+      return DEFAULTS[key];
+    }
   },
   set(key, value) {
     Zotero.Prefs.set(PREFS_PREFIX + key, value, true);
