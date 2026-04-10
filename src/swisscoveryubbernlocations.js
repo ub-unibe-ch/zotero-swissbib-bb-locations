@@ -1,6 +1,6 @@
 // Preference utility wrapper
 const PREFS_PREFIX = "extensions.swisscoveryubbernlocations.";
-const DEFAULTS = __PREF_DEFAULTS__;
+const DEFAULTS = globalThis.__PREF_DEFAULTS__ || {};
 
 const Pref = {
   get(key) {
