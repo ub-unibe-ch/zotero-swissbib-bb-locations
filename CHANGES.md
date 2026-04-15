@@ -1,5 +1,8 @@
 # Änderungen
 
+## v0.3.4
+- Zotero 9 Kompatibilität
+
 ## v0.3.3
 - Feature: Debug-Modus mit Zeitstempel für Bestellnotizen
 - Feature: Funktion zum Löschen von Bestellnotizen (im Debug-Modus)
