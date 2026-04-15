@@ -1,5 +1,11 @@
 # Änderungen
 
+## v0.3.3
+- Feature: Debug-Modus mit Zeitstempel für Bestellnotizen
+- Feature: Funktion zum Löschen von Bestellnotizen (im Debug-Modus)
+- Verbesserung: Validierung und Logging für Bestellnotizen
+- Verbesserung: Batch-Speicherung über Zotero.DB.executeTransaction
+
 ## v0.3.2
 - Bugfix: Fallback-Defaults für Preferences, wenn Zotero die Defaults aus prefs.js beim Update nicht lädt
 

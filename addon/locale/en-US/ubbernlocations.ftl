@@ -15,3 +15,9 @@ preferences-extra =
 
 preferences-apiKey =
     .label = API Key for Alma
+
+itemmenu-clearOrderNotes =
+    .label = Clear order notes (Debug)
+
+preferences-debug =
+    .label = Debug mode (append timestamps to entries)

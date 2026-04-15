@@ -16,6 +16,7 @@ const Pref = {
   get sruurl() { return this.get("sruurl"); },
   get apikey() { return this.get("apikey"); },
   get targetField() { return this.get("targetField"); },
+  get debug() { return this.get("debug"); },
 };
 
 SUL = {
@@ -98,6 +99,14 @@ SUL = {
       command: this.orderNote.addOrderNote.bind(this),
       dataL10nId: "zoteroswisscoveryubbernlocations-itemmenu-orderNoteToAbstract",
     });
+
+    if (Pref.debug) {
+      this.createMenuItem(doc, this.popup, {
+        id: "submenuitem3",
+        command: this.orderNote.clearOrderNotes.bind(this),
+        dataL10nId: "zoteroswisscoveryubbernlocations-itemmenu-clearOrderNotes",
+      });
+    }
   },
 
   createMenuItem(doc, parent, { id, command, dataL10nId }) {
@@ -156,13 +165,49 @@ SUL = {
       const items = selectedItems.filter(
         (item) => item.itemTypeID === Zotero.ItemTypes.getID("book")
       );
-      for (const item of items) {
-        const tags = item.getTags();
-        const { ddcs, orderCodes, budgetCode } = SUL.orderNote.extractTags(tags);
-        const orderNote = SUL.orderNote.constructOrderNote({ ddcs, orderCodes, budgetCode });
-        item.setField("volume", orderNote);
-        await item.saveTx();
-      }
+      SUL.log(`addOrderNote: processing ${items.length} items`);
+      await Zotero.DB.executeTransaction(async () => {
+        for (const [i, item] of items.entries()) {
+          const title = item.getField("title");
+          const tags = item.getTags();
+          SUL.log(`addOrderNote [${i + 1}/${items.length}] "${title}": ${tags.length} tags`);
+          const { ddcs, orderCodes, budgetCode } = SUL.orderNote.extractTags(tags);
+          SUL.log(`addOrderNote [${i + 1}/${items.length}] ETAT="${budgetCode}" DDC=[${ddcs}] BC=[${orderCodes}]`);
+
+          const missing = [];
+          if (!budgetCode) missing.push("ETAT");
+          if (!ddcs.length) missing.push("DDC");
+
+          let value;
+          if (missing.length) {
+            value = `⚠ FEHLT: ${missing.join(", ")}`;
+          } else {
+            value = SUL.orderNote.constructOrderNote({ ddcs, orderCodes, budgetCode });
+          }
+          if (Pref.debug) {
+            value += ` [${new Date().toLocaleString()}]`;
+          }
+          SUL.log(`addOrderNote [${i + 1}/${items.length}] result: "${value}"`);
+
+          item.setField("volume", value);
+          await item.save();
+        }
+      });
+    },
+
+    async clearOrderNotes() {
+      const ZoteroPane = Zotero.getActiveZoteroPane();
+      const selectedItems = ZoteroPane.getSelectedItems();
+      const items = selectedItems.filter(
+        (item) => item.itemTypeID === Zotero.ItemTypes.getID("book")
+      );
+      await Zotero.DB.executeTransaction(async () => {
+        for (const item of items) {
+          item.setField("volume", "");
+          await item.save();
+        }
+      });
+      SUL.log(`clearOrderNotes: cleared ${items.length} items`);
     },
 
     extractTags(tags) {

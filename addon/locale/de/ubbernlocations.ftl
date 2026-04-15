@@ -15,3 +15,9 @@ preferences-extra =
 
 preferences-apiKey =
     .label = Api-Key für Alma
+
+itemmenu-clearOrderNotes =
+    .label = Bestellnotizen löschen (Debug)
+
+preferences-debug =
+    .label = Debug-Modus (Zeitstempel an Einträge anhängen)
