@@ -32,8 +32,8 @@ async function startup({ id, version, rootURI }) {
 			if (win.ZoteroPane) SUL.ensureFTL(win);
 		}
 	} catch (error) {
-		this.log("Error during startup");
-		this.log(error);
+		log("Error during startup");
+		log(error);
 	}
 }
 
@@ -41,8 +41,8 @@ function onMainWindowLoad({ window }) {
 	try {
 		SUL.ensureFTL(window);
 	} catch (error) {
-		this.log("Error while loading main window");
-		this.log(error);
+		log("Error while loading main window");
+		log(error);
 	}
 }
 
@@ -52,8 +52,8 @@ function shutdown() {
 		SUL.unregisterMenu();
 		SUL = undefined;
 	} catch (error) {
-		this.log("Error while shutting down");
-		this.log(error);
+		log("Error while shutting down");
+		log(error);
 	}
 }
 
@@ -61,7 +61,7 @@ function uninstall() {
 	try {
 		log("Uninstalled");
 	} catch (error) {
-		this.log("Error while uninstalling");
-		this.log(error);
+		log("Error while uninstalling");
+		log(error);
 	}
 }
