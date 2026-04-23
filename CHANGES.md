@@ -1,5 +1,10 @@
 # Änderungen
 
+## v0.4.0
+- **Breaking**: Zotero 7 wird nicht mehr unterstützt (`strict_min_version = "8.0"`)
+- Menüregistrierung auf `Zotero.MenuManager` umgestellt (deklarativ, fenster­übergreifend, automatisches Cleanup)
+- Debug-Menüpunkt „Bestellnotizen löschen" schaltet sich zur Laufzeit über die Debug-Pref um — kein Plugin-Restart mehr nötig
+
 ## v0.3.4
 - Zotero 9 Kompatibilität
 
