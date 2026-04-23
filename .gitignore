@@ -13,3 +13,6 @@ typings/
 # Reference/template directories
 zotero-plugin-template/
 .claude/
+
+# Local work plans (not shared)
+.plans/

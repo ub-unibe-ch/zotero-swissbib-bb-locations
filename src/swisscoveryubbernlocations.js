@@ -24,7 +24,8 @@ SUL = {
   version: null,
   rootURI: null,
   initialized: false,
-  addedElementIDs: [],
+  menuID: null,
+  ftlFilename: "zoteroswisscoveryubbernlocations-ubbernlocations.ftl",
 
   init({ id, version, rootURI }) {
     if (this.initialized) return;
@@ -67,87 +68,48 @@ SUL = {
     Zotero.debug("[ Swisscovery UB Bern Locations ] : " + msg);
   },
 
-  addToWindow(window) {
-    let doc = window.document;
+  ensureFTL(window) {
+    if (!window?.MozXULElement) return;
+    window.MozXULElement.insertFTLIfNeeded(this.ftlFilename);
+  },
 
-    // Use Fluent for localization
-    window.MozXULElement.insertFTLIfNeeded("zoteroswisscoveryubbernlocations-ubbernlocations.ftl");
-
-    // Add a submenu to the item menu
-    this.submenu = doc.createXULElement("menu");
-    this.submenu.id = "SUL_submenu";
-    this.submenu.setAttribute("type", "menu");
-    this.submenu.setAttribute("class", "menuitem-iconic");
-    this.submenu.setAttribute("image", this.rootURI + "content/icons/glass_48.png");
-    this.submenu.setAttribute("data-l10n-id", "zoteroswisscoveryubbernlocations-itemmenu-submenu");
-    doc.getElementById("zotero-itemmenu").appendChild(this.submenu);
-    this.storeAddedElement(this.submenu);
-
-    // Add a menu popup
-    this.popup = this.submenu.appendChild(doc.createXULElement("menupopup"));
-    this.popup.id = "my_popup";
-    this.storeAddedElement(this.popup);
-
-    this.createMenuItem(doc, this.popup, {
-      id: "submenuitem",
-      command: this.locationLookup.LocationLookup.bind(this),
-      dataL10nId: "zoteroswisscoveryubbernlocations-itemmenu-locationlookup",
+  registerMenu() {
+    this.menuID = Zotero.MenuManager.registerMenu({
+      menuID: "swisscoveryubbernlocations-itemmenu",
+      pluginID: this.id,
+      target: "main/library/item",
+      menus: [
+        {
+          menuType: "submenu",
+          l10nID: "zoteroswisscoveryubbernlocations-itemmenu-submenu",
+          icon: this.rootURI + "content/icons/glass_48.png",
+          menus: [
+            {
+              menuType: "menuitem",
+              l10nID: "zoteroswisscoveryubbernlocations-itemmenu-locationlookup",
+              onCommand: () => SUL.locationLookup.LocationLookup(),
+            },
+            {
+              menuType: "menuitem",
+              l10nID: "zoteroswisscoveryubbernlocations-itemmenu-orderNoteToAbstract",
+              onCommand: () => SUL.orderNote.addOrderNote(),
+            },
+            {
+              menuType: "menuitem",
+              l10nID: "zoteroswisscoveryubbernlocations-itemmenu-clearOrderNotes",
+              onShowing: (event, context) => context.setVisible(Pref.debug),
+              onCommand: () => SUL.orderNote.clearOrderNotes(),
+            },
+          ],
+        },
+      ],
     });
-
-    this.createMenuItem(doc, this.popup, {
-      id: "submenuitem2",
-      command: this.orderNote.addOrderNote.bind(this),
-      dataL10nId: "zoteroswisscoveryubbernlocations-itemmenu-orderNoteToAbstract",
-    });
-
-    if (Pref.debug) {
-      this.createMenuItem(doc, this.popup, {
-        id: "submenuitem3",
-        command: this.orderNote.clearOrderNotes.bind(this),
-        dataL10nId: "zoteroswisscoveryubbernlocations-itemmenu-clearOrderNotes",
-      });
-    }
   },
 
-  createMenuItem(doc, parent, { id, command, dataL10nId }) {
-    const menuItem = doc.createXULElement("menuitem");
-    menuItem.id = id;
-    menuItem.setAttribute("type", "command");
-    menuItem.setAttribute("class", "menuitem");
-    menuItem.setAttribute("data-l10n-id", dataL10nId);
-    menuItem.addEventListener("command", command);
-    parent.appendChild(menuItem);
-    this.storeAddedElement(menuItem);
-  },
-
-  addToAllWindows() {
-    const windows = Zotero.getMainWindows();
-    for (const win of windows) {
-      if (!win.ZoteroPane) continue;
-      this.addToWindow(win);
-    }
-  },
-
-  storeAddedElement(elem) {
-    if (!elem.id) {
-      throw new Error("Element must have an id");
-    }
-    this.addedElementIDs.push(elem.id);
-  },
-
-  removeFromWindow(window) {
-    const doc = window.document;
-    for (const id of this.addedElementIDs) {
-      doc.getElementById(id)?.remove();
-    }
-    doc.querySelector('[href="zoteroswisscoveryubbernlocations-ubbernlocations.ftl"]')?.remove();
-  },
-
-  removeFromAllWindows() {
-    const windows = Zotero.getMainWindows();
-    for (const win of windows) {
-      if (!win.ZoteroPane) continue;
-      this.removeFromWindow(win);
+  unregisterMenu() {
+    if (this.menuID) {
+      Zotero.MenuManager.unregisterMenu(this.menuID);
+      this.menuID = null;
     }
   },
 
