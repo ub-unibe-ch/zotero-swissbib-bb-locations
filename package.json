@@ -24,6 +24,7 @@
     
     "scripts": {
         "start": "zotero-plugin serve",
+        "startbeta": "node scripts/start-beta.mjs",
         "build": "zotero-plugin build",
         "release": "zotero-plugin release",
         "bump": "bumpp --commit \"chore(publish): release v%s\" --no-tag",
