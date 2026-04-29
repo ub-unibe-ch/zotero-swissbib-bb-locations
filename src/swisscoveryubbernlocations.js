@@ -208,7 +208,7 @@ SUL = {
   //////////////////////////////////////////////////////////////////
 
   picker: {
-    show({ title, entries }) {
+    show({ title, entries, existingCodes, partialCodes, itemCount }) {
       return new Promise((resolve) => {
         let resolved = false;
         const safeResolve = (val) => {
@@ -219,11 +219,11 @@ SUL = {
         };
         SUL.picker._currentResolve = safeResolve;
         const win = Zotero.getMainWindow();
-        const io = { title, entries, result: null };
+        const io = { title, entries, existingCodes: existingCodes || new Set(), partialCodes: partialCodes || new Set(), itemCount: itemCount || 1, result: null };
         const dialog = win.openDialog(
           "about:blank",
           "sul-picker",
-          "centerscreen,resizable=yes,dependent=yes,width=420,height=440",
+          "centerscreen,resizable=yes,dependent=yes,width=420,height=500",
           io,
         );
         dialog.addEventListener(
@@ -231,9 +231,6 @@ SUL = {
           () => {
             try { Zotero.debug(`[SUL picker] DOMContentLoaded`); } catch (e) {}
             SUL.picker.build(dialog);
-            // unload-Listener erst NACH DOMContentLoaded registrieren,
-            // damit frühe Open-time-unloads (about:blank-Lifecycle) uns nicht
-            // versehentlich auf null resolven (Toolkit-Pattern, vgl. loadLock-Guard).
             dialog.addEventListener(
               "unload",
               () => {
@@ -253,22 +250,40 @@ SUL = {
     build(dialog) {
       const io = dialog.arguments[0];
       const doc = dialog.document;
-      if (io.title) doc.title = io.title;
+      const baseTitle = io.title || "";
+      if (baseTitle) doc.title = baseTitle;
 
       const style = doc.createElement("style");
       style.textContent = `
-        body { margin: 0; padding: 12px; font-family: sans-serif; }
-        #sul-filter { width: 100%; padding: 6px 8px; box-sizing: border-box; font-size: 13px; }
-        #sul-results { list-style: none; margin: 8px 0 0 0; padding: 0; max-height: 360px; overflow-y: auto; border: 1px solid #ccc; }
+        body { margin: 0; padding: 12px; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
+        #sul-filter { width: 100%; padding: 6px 8px; box-sizing: border-box; font-size: 13px; flex-shrink: 0; }
+        #sul-results { list-style: none; margin: 8px 0 0 0; padding: 0; flex: 1 1 0; overflow-y: auto; border: 1px solid #ccc; }
         #sul-results li { padding: 6px 10px; cursor: pointer; display: flex; flex-wrap: wrap; column-gap: 10px; row-gap: 2px; align-items: baseline; }
         #sul-results li.active { background: #2a7ad4; color: #fff; }
         #sul-results li:hover:not(.active) { background: #e6effc; }
         #sul-results li.empty { color: #888; font-style: italic; cursor: default; }
         #sul-results li.empty:hover { background: transparent; }
+        #sul-results li.existing { color: #888; cursor: default; }
+        #sul-results li.existing:hover { background: transparent; }
+        #sul-results li.existing.active { background: #2a7ad4; color: #fff; }
+        #sul-results li.partial { color: #666; }
+        .sul-mark { display: inline-block; width: 18px; text-align: center; font-weight: 700; flex-shrink: 0; }
+        .sul-mark.selected { color: #2a7ad4; }
+        .sul-mark.existing { color: #c77600; }
+        .sul-mark.partial { color: #c77600; opacity: 0.5; }
+        #sul-results li.active .sul-mark { color: #fff; }
         .sul-code { font-weight: 600; min-width: 48px; flex-shrink: 0; }
         .sul-label { flex: 1 1 0; min-width: 0; }
-        .sul-hint { font-size: 11px; color: #888; font-style: italic; flex-basis: 100%; padding-left: 58px; }
+        .sul-hint { font-size: 11px; color: #888; font-style: italic; flex-basis: 100%; padding-left: 76px; }
         #sul-results li.active .sul-hint { color: rgba(255,255,255,0.85); }
+        #sul-footer { margin-top: 8px; padding: 6px 10px; border-top: 1px solid #ccc; font-size: 12px; color: #555; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+        .sul-footer-row { display: flex; gap: 6px; align-items: baseline; }
+        .sul-footer-label { font-weight: 600; flex-shrink: 0; }
+        #sul-footer-tags, #sul-footer-existing-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+        #sul-footer-hint { font-size: 10px; color: #999; border-top: 1px solid #e0e0e0; padding-top: 4px; margin-top: 2px; }
+        .sul-footer-tag { background: #2a7ad4; color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+        .sul-footer-existing-tag { background: #c77600; }
+        .sul-footer-partial-tag { background: #c77600; opacity: 0.6; }
       `;
       doc.head.appendChild(style);
 
@@ -282,9 +297,126 @@ SUL = {
       results.id = "sul-results";
       doc.body.appendChild(results);
 
+      const footer = doc.createElement("div");
+      footer.id = "sul-footer";
+      const existingRow = doc.createElement("div");
+      existingRow.id = "sul-footer-existing";
+      existingRow.className = "sul-footer-row";
+      existingRow.style.display = "none";
+      const existingLabel = doc.createElement("span");
+      existingLabel.className = "sul-footer-label";
+      existingLabel.textContent = io.itemCount > 1 ? "Vergeben (alle):" : "Vergeben:";
+      const existingTags = doc.createElement("span");
+      existingTags.id = "sul-footer-existing-tags";
+      existingRow.appendChild(existingLabel);
+      existingRow.appendChild(existingTags);
+      footer.appendChild(existingRow);
+      const partialRow = doc.createElement("div");
+      partialRow.id = "sul-footer-partial";
+      partialRow.className = "sul-footer-row";
+      partialRow.style.display = "none";
+      const partialLabel = doc.createElement("span");
+      partialLabel.className = "sul-footer-label";
+      partialLabel.textContent = "Vergeben (teilweise):";
+      const partialTags = doc.createElement("span");
+      partialTags.id = "sul-footer-partial-tags";
+      partialRow.appendChild(partialLabel);
+      partialRow.appendChild(partialTags);
+      footer.appendChild(partialRow);
+      const selectedRow = doc.createElement("div");
+      selectedRow.className = "sul-footer-row";
+      const footerLabel = doc.createElement("span");
+      footerLabel.className = "sul-footer-label";
+      footerLabel.textContent = "Auswahl:";
+      const footerTags = doc.createElement("span");
+      footerTags.id = "sul-footer-tags";
+      footerTags.textContent = "—";
+      selectedRow.appendChild(footerLabel);
+      selectedRow.appendChild(footerTags);
+      footer.appendChild(selectedRow);
+      const hint = doc.createElement("div");
+      hint.id = "sul-footer-hint";
+      const legend = doc.createElement("div");
+      legend.textContent = "✓ ausgewählt · ● alle haben es · ◔ manche haben es";
+      const keys = doc.createElement("div");
+      keys.textContent = "Enter: wählen · Shift+Enter: wählen + Filter löschen · Ctrl+Enter: übernehmen · Esc: abbrechen";
+      hint.appendChild(legend);
+      hint.appendChild(keys);
+      footer.appendChild(hint);
+      doc.body.appendChild(footer);
+
       const entries = Array.isArray(io.entries) ? io.entries : [];
+      const existingCodes = io.existingCodes instanceof Set ? io.existingCodes : new Set(io.existingCodes || []);
+      const partialCodes = io.partialCodes instanceof Set ? io.partialCodes : new Set(io.partialCodes || []);
+      const selected = new Set();
       let visible = [];
       let activeIdx = 0;
+
+      function updateTitle() {
+        const n = selected.size;
+        doc.title = n > 0 ? `${baseTitle} (${n} ausgewählt)` : baseTitle;
+      }
+
+      function toggleEntry(entry, resetFilter) {
+        if (existingCodes.has(entry.code)) return;
+        const key = entry.code;
+        if (selected.has(key)) {
+          selected.delete(key);
+        } else {
+          selected.add(key);
+        }
+        updateTitle();
+        updateFooter();
+        if (resetFilter) {
+          filter.value = "";
+          activeIdx = 0;
+        }
+        render();
+        filter.focus();
+      }
+
+      function updateFooter() {
+        const container = doc.getElementById("sul-footer-tags");
+        container.replaceChildren();
+        if (selected.size === 0) {
+          container.textContent = "—";
+        } else {
+          entries.filter((e) => selected.has(e.code)).forEach((e) => {
+            const chip = doc.createElement("span");
+            chip.className = "sul-footer-tag";
+            chip.textContent = e.code;
+            container.appendChild(chip);
+          });
+        }
+        const existingRow = doc.getElementById("sul-footer-existing");
+        const existingContainer = doc.getElementById("sul-footer-existing-tags");
+        existingContainer.replaceChildren();
+        if (existingCodes.size > 0) {
+          existingRow.style.display = "";
+          entries.filter((e) => existingCodes.has(e.code)).forEach((e) => {
+            const chip = doc.createElement("span");
+            chip.className = "sul-footer-tag sul-footer-existing-tag";
+            chip.textContent = e.code;
+            existingContainer.appendChild(chip);
+          });
+        } else {
+          existingRow.style.display = "none";
+        }
+        const partialRow = doc.getElementById("sul-footer-partial");
+        const partialContainer = doc.getElementById("sul-footer-partial-tags");
+        partialContainer.replaceChildren();
+        if (partialCodes.size > 0) {
+          partialRow.style.display = "";
+          entries.filter((e) => partialCodes.has(e.code)).forEach((e) => {
+            const chip = doc.createElement("span");
+            chip.className = "sul-footer-tag sul-footer-partial-tag";
+            chip.textContent = e.code;
+            partialContainer.appendChild(chip);
+          });
+        } else {
+          partialRow.style.display = "none";
+        }
+      }
 
       function render() {
         const q = filter.value.trim().toLowerCase();
@@ -310,12 +442,30 @@ SUL = {
 
         visible.forEach((entry, i) => {
           const li = doc.createElement("li");
+          const isExisting = existingCodes.has(entry.code);
+          const isPartial = partialCodes.has(entry.code);
+          const mark = doc.createElement("span");
+          mark.className = "sul-mark";
+          if (selected.has(entry.code)) {
+            mark.classList.add("selected");
+            mark.textContent = "✓";
+          } else if (isExisting) {
+            mark.classList.add("existing");
+            mark.textContent = "●";
+          } else if (isPartial) {
+            mark.classList.add("partial");
+            mark.textContent = "◔";
+          } else {
+            mark.textContent = "✓";
+            mark.style.visibility = "hidden";
+          }
           const code = doc.createElement("span");
           code.className = "sul-code";
           code.textContent = entry.code;
           const label = doc.createElement("span");
           label.className = "sul-label";
           label.textContent = entry.label;
+          li.appendChild(mark);
           li.appendChild(code);
           li.appendChild(label);
           if (entry.hint) {
@@ -325,9 +475,12 @@ SUL = {
             li.appendChild(hint);
           }
           if (i === activeIdx) li.classList.add("active");
+          if (isExisting) li.classList.add("existing");
+          if (isPartial && !isExisting) li.classList.add("partial");
           li.addEventListener("click", () => {
+            if (isExisting) return;
             try { Zotero.debug(`[SUL picker] click: ${entry.code}`); } catch (e) {}
-            commit(i);
+            toggleEntry(entry, false);
           });
           li.addEventListener("mousemove", () => setActive(i));
           results.appendChild(li);
@@ -345,33 +498,34 @@ SUL = {
         if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest" });
       }
 
-      function commit(i) {
-        if (!visible.length) return;
-        const result = visible[i];
-        try { Zotero.debug(`[SUL picker] commit: i=${i}, result=${JSON.stringify(result)}`); } catch (e) {}
-        if (typeof SUL.picker._currentResolve === "function") {
-          SUL.picker._currentResolve(result);
-        }
-        try { dialog.close(); } catch (e) {
-          try { Zotero.debug(`[SUL picker] dialog.close() threw: ${e.message}`); } catch (e2) {}
-        }
-      }
-
       filter.addEventListener("input", () => {
         activeIdx = 0;
         render();
       });
       filter.addEventListener("keydown", (e) => {
-        try { Zotero.debug(`[SUL picker] keydown: ${e.key}`); } catch (e2) {}
+        try { Zotero.debug(`[SUL picker] keydown: ${e.key} ctrl=${e.ctrlKey}`); } catch (e2) {}
         if (e.key === "ArrowDown") {
           e.preventDefault();
           setActive(activeIdx + 1);
         } else if (e.key === "ArrowUp") {
           e.preventDefault();
           setActive(activeIdx - 1);
+        } else if (e.key === "Enter" && e.ctrlKey) {
+          e.preventDefault();
+          if (selected.size === 0) return;
+          const result = entries.filter((e) => selected.has(e.code));
+          if (typeof SUL.picker._currentResolve === "function") {
+            SUL.picker._currentResolve(result);
+          }
+          try { dialog.close(); } catch (err) {}
+        } else if (e.key === "Enter" && e.shiftKey) {
+          e.preventDefault();
+          if (!visible.length) return;
+          toggleEntry(visible[activeIdx], true);
         } else if (e.key === "Enter") {
           e.preventDefault();
-          commit(activeIdx);
+          if (!visible.length) return;
+          toggleEntry(visible[activeIdx], false);
         } else if (e.key === "Escape") {
           e.preventDefault();
           if (typeof SUL.picker._currentResolve === "function") {
@@ -382,6 +536,7 @@ SUL = {
       });
 
       render();
+      updateFooter();
       filter.focus();
     },
   },
@@ -516,22 +671,50 @@ SUL = {
         SUL.log("ddcPicker: no items selected");
         return;
       }
-      const choice = await SUL.picker.show({
-        title: "DDC-Tag wählen",
+      const allHaveCodes = new Set();
+      const someHaveCodes = new Set();
+      if (items.length === 1) {
+        items[0].getTags().forEach((t) => {
+          if (t.tag.startsWith("DDC")) {
+            allHaveCodes.add(t.tag.replace("DDC ", ""));
+          }
+        });
+      } else {
+        const perItem = items.map((item) =>
+          new Set(item.getTags().filter((t) => t.tag.startsWith("DDC")).map((t) => t.tag.replace("DDC ", "")))
+        );
+        const allCodes = new Set(perItem.flatMap((s) => [...s]));
+        allCodes.forEach((code) => {
+          const count = perItem.filter((s) => s.has(code)).length;
+          if (count === items.length) {
+            allHaveCodes.add(code);
+          } else {
+            someHaveCodes.add(code);
+          }
+        });
+      }
+      const title = items.length === 1 ? "DDC-Tag wählen" : `DDC-Tag wählen (${items.length} Titel)`;
+      const choices = await SUL.picker.show({
+        title,
         entries: SUL.ddcPicker.entries,
+        existingCodes: allHaveCodes,
+        partialCodes: someHaveCodes,
+        itemCount: items.length,
       });
-      if (!choice) {
+      if (!choices) {
         SUL.log("ddcPicker: cancelled");
         return;
       }
-      const tag = `DDC ${choice.code}`;
+      const tags = choices.map((e) => `DDC ${e.code}`);
       await Zotero.DB.executeTransaction(async () => {
         for (const item of items) {
-          item.addTag(tag, 0);
+          for (const tag of tags) {
+            item.addTag(tag, 0);
+          }
           await item.save();
         }
       });
-      SUL.log(`ddcPicker: added "${tag}" to ${items.length} item(s)`);
+      SUL.log(`ddcPicker: added ${tags.join(", ")} to ${items.length} item(s)`);
     },
   },
 
