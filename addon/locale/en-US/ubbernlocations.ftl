@@ -7,6 +7,9 @@ itemmenu-locationlookup =
 itemmenu-orderNoteToAbstract =
     .label = Enter order notes in abstract
 
+itemmenu-pickDDC =
+    .label = Add DDC tag…
+
 preferences-abstractNote =
     .label = Abstract
 

@@ -96,6 +96,11 @@ SUL = {
             },
             {
               menuType: "menuitem",
+              l10nID: "zoteroswisscoveryubbernlocations-itemmenu-pickDDC",
+              onCommand: () => SUL.ddcPicker.pickAndApply(),
+            },
+            {
+              menuType: "menuitem",
               l10nID: "zoteroswisscoveryubbernlocations-itemmenu-clearOrderNotes",
               onShowing: (event, context) => context.setVisible(Pref.debug),
               onCommand: () => SUL.orderNote.clearOrderNotes(),
@@ -193,6 +198,307 @@ SUL = {
     constructOrderNote({ ddcs, orderCodes, budgetCode }) {
       const orderNote = [budgetCode, ddcs.join(", "), orderCodes.join(", ")].filter(Boolean);
       return orderNote.join(" // ");
+    },
+  },
+
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+  // PICKER (generic search-and-pick dialog)
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+
+  picker: {
+    show({ title, entries }) {
+      return new Promise((resolve) => {
+        const win = Zotero.getMainWindow();
+        const io = { title, entries, result: null };
+        const dialog = win.openDialog(
+          "about:blank",
+          "sul-picker",
+          "chrome,centerscreen,resizable=yes,dependent=yes,width=420,height=440",
+          io,
+        );
+        dialog.addEventListener(
+          "load",
+          () => SUL.picker.build(dialog, io),
+          { once: true },
+        );
+        dialog.addEventListener(
+          "unload",
+          () => resolve(io.result),
+          { once: true },
+        );
+      });
+    },
+
+    build(dialog, io) {
+      const doc = dialog.document;
+      if (io.title) doc.title = io.title;
+
+      const style = doc.createElement("style");
+      style.textContent = `
+        body { margin: 0; padding: 12px; font-family: sans-serif; }
+        #sul-filter { width: 100%; padding: 6px 8px; box-sizing: border-box; font-size: 13px; }
+        #sul-results { list-style: none; margin: 8px 0 0 0; padding: 0; max-height: 360px; overflow-y: auto; border: 1px solid #ccc; }
+        #sul-results li { padding: 6px 10px; cursor: pointer; display: flex; flex-wrap: wrap; column-gap: 10px; row-gap: 2px; align-items: baseline; }
+        #sul-results li.active { background: #2a7ad4; color: #fff; }
+        #sul-results li:hover:not(.active) { background: #e6effc; }
+        #sul-results li.empty { color: #888; font-style: italic; cursor: default; }
+        #sul-results li.empty:hover { background: transparent; }
+        .sul-code { font-weight: 600; min-width: 48px; flex-shrink: 0; }
+        .sul-label { flex: 1 1 0; min-width: 0; }
+        .sul-hint { font-size: 11px; color: #888; font-style: italic; flex-basis: 100%; padding-left: 58px; }
+        #sul-results li.active .sul-hint { color: rgba(255,255,255,0.85); }
+      `;
+      doc.head.appendChild(style);
+
+      const filter = doc.createElement("input");
+      filter.id = "sul-filter";
+      filter.type = "text";
+      filter.placeholder = "Filter…";
+      doc.body.appendChild(filter);
+
+      const results = doc.createElement("ul");
+      results.id = "sul-results";
+      doc.body.appendChild(results);
+
+      const entries = Array.isArray(io.entries) ? io.entries : [];
+      let visible = [];
+      let activeIdx = 0;
+
+      function render() {
+        const q = filter.value.trim().toLowerCase();
+        visible = q
+          ? entries.filter(
+              (e) =>
+                String(e.code).toLowerCase().startsWith(q) ||
+                String(e.label).toLowerCase().includes(q),
+            )
+          : entries.slice();
+
+        results.replaceChildren();
+
+        if (!visible.length) {
+          const li = doc.createElement("li");
+          li.className = "empty";
+          li.textContent = "Keine Treffer";
+          results.appendChild(li);
+          return;
+        }
+
+        if (activeIdx >= visible.length) activeIdx = 0;
+
+        visible.forEach((entry, i) => {
+          const li = doc.createElement("li");
+          const code = doc.createElement("span");
+          code.className = "sul-code";
+          code.textContent = entry.code;
+          const label = doc.createElement("span");
+          label.className = "sul-label";
+          label.textContent = entry.label;
+          li.appendChild(code);
+          li.appendChild(label);
+          if (entry.hint) {
+            const hint = doc.createElement("span");
+            hint.className = "sul-hint";
+            hint.textContent = entry.hint;
+            li.appendChild(hint);
+          }
+          if (i === activeIdx) li.classList.add("active");
+          li.addEventListener("click", () => commit(i));
+          li.addEventListener("mousemove", () => setActive(i));
+          results.appendChild(li);
+        });
+      }
+
+      function setActive(i) {
+        if (!visible.length) return;
+        activeIdx = Math.max(0, Math.min(i, visible.length - 1));
+        const children = results.children;
+        for (let idx = 0; idx < children.length; idx++) {
+          children[idx].classList.toggle("active", idx === activeIdx);
+        }
+        const el = children[activeIdx];
+        if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest" });
+      }
+
+      function commit(i) {
+        if (!visible.length) return;
+        io.result = visible[i];
+        dialog.close();
+      }
+
+      filter.addEventListener("input", () => {
+        activeIdx = 0;
+        render();
+      });
+      filter.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setActive(activeIdx + 1);
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setActive(activeIdx - 1);
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          commit(activeIdx);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          dialog.close();
+        }
+      });
+
+      render();
+      filter.focus();
+    },
+  },
+
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+  // DDC PICKER
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+
+  ddcPicker: {
+    entries: [
+      { code: "000", label: "Allgemeines, Wissenschaft" },
+      { code: "004", label: "Informatik" },
+      { code: "010", label: "Bibliografien" },
+      { code: "020", label: "Bibliotheks- und Informationswissenschaft" },
+      { code: "030", label: "Enzyklopädien" },
+      { code: "050", label: "Zeitschriften, fortlaufende Sammelwerke" },
+      { code: "060", label: "Organisationen, Museumswissenschaft" },
+      { code: "070", label: "Nachrichtenmedien, Journalismus, Verlagswesen" },
+      { code: "080", label: "Allgemeine Sammelwerke" },
+      { code: "090", label: "Handschriften, seltene Bücher" },
+
+      { code: "100", label: "Philosophie" },
+      { code: "130", label: "Parapsychologie, Okkultismus" },
+      { code: "150", label: "Psychologie" },
+
+      { code: "200", label: "Religion, Religionsphilosophie" },
+      { code: "220", label: "Bibel" },
+      { code: "230", label: "Theologie, Christentum" },
+      { code: "290", label: "Andere Religionen" },
+
+      { code: "300", label: "Sozialwissenschaften, Soziologie, Anthropologie" },
+      { code: "310", label: "Allgemeine Statistiken" },
+      { code: "320", label: "Politik" },
+      { code: "330", label: "Wirtschaft", hint: "Management → 650" },
+      { code: "333.7", label: "Natürliche Ressourcen, Energie und Umwelt" },
+      { code: "340", label: "Recht", hint: "Kriminologie, Strafvollzug → 360" },
+      { code: "350", label: "Öffentliche Verwaltung" },
+      { code: "355", label: "Militär" },
+      { code: "360", label: "Soziale Probleme, Sozialdienste, Versicherungen" },
+      { code: "370", label: "Erziehung, Schul- und Bildungswesen" },
+      { code: "380", label: "Handel, Kommunikation, Verkehr", hint: "Philatelie → 760" },
+      { code: "390", label: "Bräuche, Etikette, Folklore" },
+
+      { code: "400", label: "Sprache, Linguistik" },
+      { code: "420", label: "Englisch" },
+      { code: "430", label: "Deutsch" },
+      { code: "439", label: "Andere germanische Sprachen" },
+      { code: "440", label: "Französisch, romanische Sprachen allgemein" },
+      { code: "450", label: "Italienisch, Rumänisch, Rätoromanisch" },
+      { code: "460", label: "Spanisch, Portugiesisch" },
+      { code: "470", label: "Latein" },
+      { code: "480", label: "Griechisch" },
+      { code: "490", label: "Andere Sprachen" },
+      { code: "491.8", label: "Slawische Sprachen" },
+
+      { code: "500", label: "Naturwissenschaften" },
+      { code: "510", label: "Mathematik" },
+      { code: "520", label: "Astronomie, Kartografie" },
+      { code: "530", label: "Physik" },
+      { code: "540", label: "Chemie", hint: "Biochemie → 570" },
+      { code: "550", label: "Geowissenschaften", hint: "Kartografie, Geodäsie → 520; Kristallografie, Mineralogie → 540" },
+      { code: "560", label: "Paläontologie" },
+      { code: "570", label: "Biowissenschaften, Biologie" },
+      { code: "580", label: "Pflanzen (Botanik)" },
+      { code: "590", label: "Tiere (Zoologie)" },
+
+      { code: "600", label: "Technik" },
+      { code: "610", label: "Medizin, Gesundheit", hint: "Veterinärmedizin → 630" },
+      { code: "620", label: "Ingenieurwissenschaften und Maschinenbau" },
+      { code: "621.3", label: "Elektrotechnik, Elektronik" },
+      { code: "624", label: "Ingenieurbau und Umwelttechnik" },
+      { code: "630", label: "Landwirtschaft, Veterinärmedizin" },
+      { code: "640", label: "Hauswirtschaft und Familienleben" },
+      { code: "650", label: "Management" },
+      { code: "660", label: "Technische Chemie" },
+      { code: "670", label: "Industrielle und handwerkliche Fertigung" },
+      { code: "690", label: "Hausbau, Bauhandwerk" },
+
+      { code: "700", label: "Künste, Bildende Kunst allgemein" },
+      { code: "710", label: "Landschaftsgestaltung, Raumplanung" },
+      { code: "720", label: "Architektur" },
+      { code: "730", label: "Plastik, Numismatik, Keramik, Metallkunst" },
+      { code: "740", label: "Grafik, angewandte Kunst" },
+      { code: "741.5", label: "Comics, Cartoons, Karikaturen" },
+      { code: "750", label: "Malerei" },
+      { code: "760", label: "Druckgrafik, Drucke" },
+      { code: "770", label: "Fotografie, Video, Computerkunst" },
+      { code: "780", label: "Musik" },
+      { code: "790", label: "Freizeitgestaltung, Darstellende Kunst" },
+      { code: "791", label: "Öffentliche Darbietungen, Film, Rundfunk" },
+      { code: "792", label: "Theater, Tanz" },
+      { code: "793", label: "Spiel" },
+      { code: "796", label: "Sport" },
+
+      { code: "800", label: "Literatur, Rhetorik, Literaturwissenschaft" },
+      { code: "810", label: "Englische Literatur Amerikas" },
+      { code: "820", label: "Englische Literatur" },
+      { code: "830", label: "Deutsche Literatur" },
+      { code: "839", label: "Literatur in anderen germanischen Sprachen" },
+      { code: "840", label: "Französische Literatur" },
+      { code: "850", label: "Italienische, rumänische, rätoromanische Literatur" },
+      { code: "860", label: "Spanische und portugiesische Literatur" },
+      { code: "870", label: "Lateinische Literatur" },
+      { code: "880", label: "Griechische Literatur" },
+      { code: "890", label: "Literatur in anderen Sprachen" },
+      { code: "891.8", label: "Slawische Literatur" },
+
+      { code: "900", label: "Geschichte" },
+      { code: "910", label: "Geografie, Reisen" },
+      { code: "914.94", label: "Geografie, Reisen (Schweiz)" },
+      { code: "920", label: "Biografie, Genealogie, Heraldik" },
+      { code: "930", label: "Alte Geschichte, Archäologie" },
+      { code: "940", label: "Geschichte Europas" },
+      { code: "949.4", label: "Geschichte der Schweiz" },
+      { code: "950", label: "Geschichte Asiens" },
+      { code: "960", label: "Geschichte Afrikas" },
+      { code: "970", label: "Geschichte Nordamerikas" },
+      { code: "980", label: "Geschichte Südamerikas" },
+      { code: "990", label: "Geschichte der übrigen Welt" },
+
+      { code: "B", label: "Belletristik", hint: "nur zusätzlich zu 800-890" },
+      { code: "K", label: "Kinder- und Jugendliteratur" },
+      { code: "S", label: "Schulbücher" },
+    ],
+
+    async pickAndApply() {
+      const ZoteroPane = Zotero.getActiveZoteroPane();
+      const items = ZoteroPane.getSelectedItems();
+      if (!items.length) {
+        SUL.log("ddcPicker: no items selected");
+        return;
+      }
+      const choice = await SUL.picker.show({
+        title: "DDC-Tag wählen",
+        entries: SUL.ddcPicker.entries,
+      });
+      if (!choice) {
+        SUL.log("ddcPicker: cancelled");
+        return;
+      }
+      const tag = `DDC ${choice.code}`;
+      await Zotero.DB.executeTransaction(async () => {
+        for (const item of items) {
+          item.addTag(tag, 0);
+          await item.save();
+        }
+      });
+      SUL.log(`ddcPicker: added "${tag}" to ${items.length} item(s)`);
     },
   },
 

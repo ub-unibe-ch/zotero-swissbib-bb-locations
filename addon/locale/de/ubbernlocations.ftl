@@ -7,6 +7,9 @@ itemmenu-locationlookup =
 itemmenu-orderNoteToAbstract =
     .label = Bestellnotiz eintragen
 
+itemmenu-pickDDC =
+    .label = DDC-Tag hinzufügen…
+
 preferences-abstractNote =
     .label = Abstract
 
