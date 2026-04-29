@@ -210,28 +210,48 @@ SUL = {
   picker: {
     show({ title, entries }) {
       return new Promise((resolve) => {
+        let resolved = false;
+        const safeResolve = (val) => {
+          if (resolved) return;
+          resolved = true;
+          try { Zotero.debug(`[SUL picker] resolve: ${JSON.stringify(val)}`); } catch (e) {}
+          resolve(val);
+        };
+        SUL.picker._currentResolve = safeResolve;
         const win = Zotero.getMainWindow();
         const io = { title, entries, result: null };
         const dialog = win.openDialog(
           "about:blank",
           "sul-picker",
-          "chrome,centerscreen,resizable=yes,dependent=yes,width=420,height=440",
+          "centerscreen,resizable=yes,dependent=yes,width=420,height=440",
           io,
         );
         dialog.addEventListener(
-          "load",
-          () => SUL.picker.build(dialog, io),
-          { once: true },
-        );
-        dialog.addEventListener(
-          "unload",
-          () => resolve(io.result),
+          "DOMContentLoaded",
+          () => {
+            try { Zotero.debug(`[SUL picker] DOMContentLoaded`); } catch (e) {}
+            SUL.picker.build(dialog);
+            // unload-Listener erst NACH DOMContentLoaded registrieren,
+            // damit frühe Open-time-unloads (about:blank-Lifecycle) uns nicht
+            // versehentlich auf null resolven (Toolkit-Pattern, vgl. loadLock-Guard).
+            dialog.addEventListener(
+              "unload",
+              () => {
+                try { Zotero.debug(`[SUL picker] unload (safety net)`); } catch (e) {}
+                safeResolve(null);
+              },
+              { once: true },
+            );
+          },
           { once: true },
         );
       });
     },
 
-    build(dialog, io) {
+    _currentResolve: null,
+
+    build(dialog) {
+      const io = dialog.arguments[0];
       const doc = dialog.document;
       if (io.title) doc.title = io.title;
 
@@ -305,7 +325,10 @@ SUL = {
             li.appendChild(hint);
           }
           if (i === activeIdx) li.classList.add("active");
-          li.addEventListener("click", () => commit(i));
+          li.addEventListener("click", () => {
+            try { Zotero.debug(`[SUL picker] click: ${entry.code}`); } catch (e) {}
+            commit(i);
+          });
           li.addEventListener("mousemove", () => setActive(i));
           results.appendChild(li);
         });
@@ -324,8 +347,14 @@ SUL = {
 
       function commit(i) {
         if (!visible.length) return;
-        io.result = visible[i];
-        dialog.close();
+        const result = visible[i];
+        try { Zotero.debug(`[SUL picker] commit: i=${i}, result=${JSON.stringify(result)}`); } catch (e) {}
+        if (typeof SUL.picker._currentResolve === "function") {
+          SUL.picker._currentResolve(result);
+        }
+        try { dialog.close(); } catch (e) {
+          try { Zotero.debug(`[SUL picker] dialog.close() threw: ${e.message}`); } catch (e2) {}
+        }
       }
 
       filter.addEventListener("input", () => {
@@ -333,6 +362,7 @@ SUL = {
         render();
       });
       filter.addEventListener("keydown", (e) => {
+        try { Zotero.debug(`[SUL picker] keydown: ${e.key}`); } catch (e2) {}
         if (e.key === "ArrowDown") {
           e.preventDefault();
           setActive(activeIdx + 1);
@@ -344,7 +374,10 @@ SUL = {
           commit(activeIdx);
         } else if (e.key === "Escape") {
           e.preventDefault();
-          dialog.close();
+          if (typeof SUL.picker._currentResolve === "function") {
+            SUL.picker._currentResolve(null);
+          }
+          try { dialog.close(); } catch (err) {}
         }
       });
 
