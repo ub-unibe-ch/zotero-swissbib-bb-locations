@@ -10,6 +10,9 @@ itemmenu-orderNoteToAbstract =
 itemmenu-pickDDC =
     .label = DDC-Tag hinzufügen…
 
+itemmenu-pickBC =
+    .label = Bestellcode wählen…
+
 preferences-abstractNote =
     .label = Abstract
 

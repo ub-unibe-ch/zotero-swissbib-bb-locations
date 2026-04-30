@@ -101,6 +101,11 @@ SUL = {
             },
             {
               menuType: "menuitem",
+              l10nID: "zoteroswisscoveryubbernlocations-itemmenu-pickBC",
+              onCommand: () => SUL.bcPicker.pickAndApply(),
+            },
+            {
+              menuType: "menuitem",
               l10nID: "zoteroswisscoveryubbernlocations-itemmenu-clearOrderNotes",
               onShowing: (event, context) => context.setVisible(Pref.debug),
               onCommand: () => SUL.orderNote.clearOrderNotes(),
@@ -204,11 +209,13 @@ SUL = {
   //////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////
   // PICKER (generic search-and-pick dialog)
+  // Accepts flat `entries` (legacy) or `groups: [{label, entries}]`.
+  // Pass `allowFreeText: true` to enable free-text fallback.
   //////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////
 
   picker: {
-    show({ title, entries, existingCodes, partialCodes, itemCount }) {
+    show({ title, entries, groups, allowFreeText, existingCodes, partialCodes, itemCount }) {
       return new Promise((resolve) => {
         let resolved = false;
         const safeResolve = (val) => {
@@ -219,7 +226,16 @@ SUL = {
         };
         SUL.picker._currentResolve = safeResolve;
         const win = Zotero.getMainWindow();
-        const io = { title, entries, existingCodes: existingCodes || new Set(), partialCodes: partialCodes || new Set(), itemCount: itemCount || 1, result: null };
+        const normalizedGroups = groups || (entries ? [{ label: null, entries }] : []);
+        const io = {
+          title,
+          groups: normalizedGroups,
+          allowFreeText: !!allowFreeText,
+          existingCodes: existingCodes || new Set(),
+          partialCodes: partialCodes || new Set(),
+          itemCount: itemCount || 1,
+          result: null,
+        };
         const dialog = win.openDialog(
           "about:blank",
           "sul-picker",
@@ -253,29 +269,39 @@ SUL = {
       const baseTitle = io.title || "";
       if (baseTitle) doc.title = baseTitle;
 
+      const allGroups = Array.isArray(io.groups) ? io.groups : [];
+      const allEntries = allGroups.flatMap(g => g.entries || []);
+      const allowFreeText = !!io.allowFreeText;
+
       const style = doc.createElement("style");
       style.textContent = `
         body { margin: 0; padding: 12px; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
         #sul-filter { width: 100%; padding: 6px 8px; box-sizing: border-box; font-size: 13px; flex-shrink: 0; }
         #sul-results { list-style: none; margin: 8px 0 0 0; padding: 0; flex: 1 1 0; overflow-y: auto; border: 1px solid #ccc; }
-        #sul-results li { padding: 6px 10px; cursor: pointer; display: flex; flex-wrap: wrap; column-gap: 10px; row-gap: 2px; align-items: baseline; }
+        #sul-results li { padding: 5px 10px; cursor: pointer; display: flex; gap: 6px; align-items: flex-start; }
         #sul-results li.active { background: #2a7ad4; color: #fff; }
-        #sul-results li:hover:not(.active) { background: #e6effc; }
+        #sul-results li:hover:not(.active):not(.group-header) { background: #e6effc; }
         #sul-results li.empty { color: #888; font-style: italic; cursor: default; }
         #sul-results li.empty:hover { background: transparent; }
         #sul-results li.existing { color: #888; cursor: default; }
         #sul-results li.existing:hover { background: transparent; }
         #sul-results li.existing.active { background: #2a7ad4; color: #fff; }
         #sul-results li.partial { color: #666; }
-        .sul-mark { display: inline-block; width: 18px; text-align: center; font-weight: 700; flex-shrink: 0; }
+        #sul-results li.group-header { display: block; font-size: 11px; font-weight: 600; color: #666; background: #f0f0f0; cursor: default; padding: 3px 10px; text-transform: uppercase; letter-spacing: 0.5px; border-top: 1px solid #ddd; }
+        #sul-results li.group-header:first-child { border-top: none; }
+        #sul-results li.add-freetext { color: #2a7ad4; font-style: italic; }
+        #sul-results li.add-freetext.active { background: #2a7ad4; color: #fff; font-style: italic; }
+        .sul-mark { width: 18px; text-align: center; font-weight: 700; flex-shrink: 0; line-height: 1.4; }
         .sul-mark.selected { color: #2a7ad4; }
         .sul-mark.existing { color: #c77600; }
         .sul-mark.partial { color: #c77600; opacity: 0.5; }
         #sul-results li.active .sul-mark { color: #fff; }
-        .sul-code { font-weight: 600; min-width: 48px; flex-shrink: 0; }
-        .sul-label { flex: 1 1 0; min-width: 0; }
-        .sul-hint { font-size: 11px; color: #888; font-style: italic; flex-basis: 100%; padding-left: 76px; }
-        #sul-results li.active .sul-hint { color: rgba(255,255,255,0.85); }
+        .sul-entry-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+        .sul-code { font-weight: 600; line-height: 1.4; }
+        .sul-label { font-size: 11px; color: #777; line-height: 1.3; }
+        #sul-results li.active .sul-label { color: rgba(255,255,255,0.85); }
+        .sul-hint { font-size: 10px; color: #999; font-style: italic; }
+        #sul-results li.active .sul-hint { color: rgba(255,255,255,0.75); }
         #sul-footer { margin-top: 8px; padding: 6px 10px; border-top: 1px solid #ccc; font-size: 12px; color: #555; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
         .sul-footer-row { display: flex; gap: 6px; align-items: baseline; }
         .sul-footer-label { font-weight: 600; flex-shrink: 0; }
@@ -290,7 +316,7 @@ SUL = {
       const filter = doc.createElement("input");
       filter.id = "sul-filter";
       filter.type = "text";
-      filter.placeholder = "Filter…";
+      filter.placeholder = allowFreeText ? "Filter / Freitext…" : "Filter…";
       doc.body.appendChild(filter);
 
       const results = doc.createElement("ul");
@@ -345,25 +371,37 @@ SUL = {
       footer.appendChild(hint);
       doc.body.appendChild(footer);
 
-      const entries = Array.isArray(io.entries) ? io.entries : [];
       const existingCodes = io.existingCodes instanceof Set ? io.existingCodes : new Set(io.existingCodes || []);
       const partialCodes = io.partialCodes instanceof Set ? io.partialCodes : new Set(io.partialCodes || []);
       const selected = new Set();
+      const freeTextSelected = new Set();
       let visible = [];
       let activeIdx = 0;
 
       function updateTitle() {
-        const n = selected.size;
+        const n = selected.size + freeTextSelected.size;
         doc.title = n > 0 ? `${baseTitle} (${n} ausgewählt)` : baseTitle;
       }
 
       function toggleEntry(entry, resetFilter) {
+        if (entry.freeTextCandidate) {
+          const text = filter.value.trim();
+          if (text) {
+            freeTextSelected.add(text);
+            filter.value = "";
+            activeIdx = 0;
+            updateTitle();
+            updateFooter();
+            render();
+            filter.focus();
+          }
+          return;
+        }
         if (existingCodes.has(entry.code)) return;
-        const key = entry.code;
-        if (selected.has(key)) {
-          selected.delete(key);
+        if (selected.has(entry.code)) {
+          selected.delete(entry.code);
         } else {
-          selected.add(key);
+          selected.add(entry.code);
         }
         updateTitle();
         updateFooter();
@@ -378,124 +416,165 @@ SUL = {
       function updateFooter() {
         const container = doc.getElementById("sul-footer-tags");
         container.replaceChildren();
-        if (selected.size === 0) {
+        if (selected.size === 0 && freeTextSelected.size === 0) {
           container.textContent = "—";
         } else {
-          entries.filter((e) => selected.has(e.code)).forEach((e) => {
+          allEntries.filter(e => selected.has(e.code)).forEach(e => {
             const chip = doc.createElement("span");
             chip.className = "sul-footer-tag";
             chip.textContent = e.code;
             container.appendChild(chip);
           });
+          freeTextSelected.forEach(text => {
+            const chip = doc.createElement("span");
+            chip.className = "sul-footer-tag";
+            chip.textContent = text;
+            container.appendChild(chip);
+          });
         }
-        const existingRow = doc.getElementById("sul-footer-existing");
+        const existingRowEl = doc.getElementById("sul-footer-existing");
         const existingContainer = doc.getElementById("sul-footer-existing-tags");
         existingContainer.replaceChildren();
         if (existingCodes.size > 0) {
-          existingRow.style.display = "";
-          entries.filter((e) => existingCodes.has(e.code)).forEach((e) => {
+          existingRowEl.style.display = "";
+          allEntries.filter(e => existingCodes.has(e.code)).forEach(e => {
             const chip = doc.createElement("span");
             chip.className = "sul-footer-tag sul-footer-existing-tag";
             chip.textContent = e.code;
             existingContainer.appendChild(chip);
           });
         } else {
-          existingRow.style.display = "none";
+          existingRowEl.style.display = "none";
         }
-        const partialRow = doc.getElementById("sul-footer-partial");
+        const partialRowEl = doc.getElementById("sul-footer-partial");
         const partialContainer = doc.getElementById("sul-footer-partial-tags");
         partialContainer.replaceChildren();
         if (partialCodes.size > 0) {
-          partialRow.style.display = "";
-          entries.filter((e) => partialCodes.has(e.code)).forEach((e) => {
+          partialRowEl.style.display = "";
+          allEntries.filter(e => partialCodes.has(e.code)).forEach(e => {
             const chip = doc.createElement("span");
             chip.className = "sul-footer-tag sul-footer-partial-tag";
             chip.textContent = e.code;
             partialContainer.appendChild(chip);
           });
         } else {
-          partialRow.style.display = "none";
+          partialRowEl.style.display = "none";
         }
       }
 
       function render() {
         const q = filter.value.trim().toLowerCase();
-        visible = q
-          ? entries.filter(
-              (e) =>
-                String(e.code).toLowerCase().startsWith(q) ||
-                String(e.label).toLowerCase().includes(q),
-            )
-          : entries.slice();
-
+        visible = [];
         results.replaceChildren();
 
-        if (!visible.length) {
-          const li = doc.createElement("li");
-          li.className = "empty";
-          li.textContent = "Keine Treffer";
-          results.appendChild(li);
+        const hasCodeMatch = q && allGroups.some(g =>
+          (g.entries || []).some(e => String(e.code).toLowerCase().startsWith(q))
+        );
+        const filteredGroups = allGroups.map(g => ({
+          label: g.label,
+          entries: !q
+            ? (g.entries || []).slice()
+            : (g.entries || []).filter(e =>
+                hasCodeMatch
+                  ? String(e.code).toLowerCase().startsWith(q)
+                  : String(e.label).toLowerCase().includes(q)
+              ),
+        })).filter(g => g.entries.length > 0);
+
+        if (filteredGroups.length === 0) {
+          if (allowFreeText && q) {
+            const entry = { code: q, label: `"${q}" hinzufügen`, freeTextCandidate: true };
+            visible = [entry];
+            activeIdx = 0;
+            const li = doc.createElement("li");
+            li.className = "add-freetext active";
+            li.dataset.entryIndex = "0";
+            li.textContent = `+ "${q}" hinzufügen`;
+            li.addEventListener("click", () => toggleEntry(entry, false));
+            results.appendChild(li);
+          } else {
+            const li = doc.createElement("li");
+            li.className = "empty";
+            li.textContent = "Keine Treffer";
+            results.appendChild(li);
+          }
           return;
         }
 
-        if (activeIdx >= visible.length) activeIdx = 0;
+        const totalEntries = filteredGroups.reduce((n, g) => n + g.entries.length, 0);
+        if (activeIdx >= totalEntries) activeIdx = 0;
 
-        visible.forEach((entry, i) => {
-          const li = doc.createElement("li");
-          const isExisting = existingCodes.has(entry.code);
-          const isPartial = partialCodes.has(entry.code);
-          const mark = doc.createElement("span");
-          mark.className = "sul-mark";
-          if (selected.has(entry.code)) {
-            mark.classList.add("selected");
-            mark.textContent = "✓";
-          } else if (isExisting) {
-            mark.classList.add("existing");
-            mark.textContent = "●";
-          } else if (isPartial) {
-            mark.classList.add("partial");
-            mark.textContent = "◔";
-          } else {
-            mark.textContent = "✓";
-            mark.style.visibility = "hidden";
+        filteredGroups.forEach(group => {
+          if (group.label) {
+            const header = doc.createElement("li");
+            header.className = "group-header";
+            header.textContent = group.label;
+            results.appendChild(header);
           }
-          const code = doc.createElement("span");
-          code.className = "sul-code";
-          code.textContent = entry.code;
-          const label = doc.createElement("span");
-          label.className = "sul-label";
-          label.textContent = entry.label;
-          li.appendChild(mark);
-          li.appendChild(code);
-          li.appendChild(label);
-          if (entry.hint) {
-            const hint = doc.createElement("span");
-            hint.className = "sul-hint";
-            hint.textContent = entry.hint;
-            li.appendChild(hint);
-          }
-          if (i === activeIdx) li.classList.add("active");
-          if (isExisting) li.classList.add("existing");
-          if (isPartial && !isExisting) li.classList.add("partial");
-          li.addEventListener("click", () => {
-            if (isExisting) return;
-            try { Zotero.debug(`[SUL picker] click: ${entry.code}`); } catch (e) {}
-            toggleEntry(entry, false);
+          group.entries.forEach(entry => {
+            const entryIdx = visible.length;
+            visible.push(entry);
+            const li = doc.createElement("li");
+            li.dataset.entryIndex = String(entryIdx);
+            const isExisting = existingCodes.has(entry.code);
+            const isPartial = partialCodes.has(entry.code);
+            const mark = doc.createElement("span");
+            mark.className = "sul-mark";
+            if (selected.has(entry.code)) {
+              mark.classList.add("selected");
+              mark.textContent = "✓";
+            } else if (isExisting) {
+              mark.classList.add("existing");
+              mark.textContent = "●";
+            } else if (isPartial) {
+              mark.classList.add("partial");
+              mark.textContent = "◔";
+            } else {
+              mark.textContent = "✓";
+              mark.style.visibility = "hidden";
+            }
+            const body = doc.createElement("span");
+            body.className = "sul-entry-body";
+            const code = doc.createElement("span");
+            code.className = "sul-code";
+            code.textContent = entry.code;
+            body.appendChild(code);
+            if (entry.label) {
+              const label = doc.createElement("span");
+              label.className = "sul-label";
+              label.textContent = entry.label;
+              body.appendChild(label);
+            }
+            if (entry.hint) {
+              const hintEl = doc.createElement("span");
+              hintEl.className = "sul-hint";
+              hintEl.textContent = entry.hint;
+              body.appendChild(hintEl);
+            }
+            li.appendChild(mark);
+            li.appendChild(body);
+            if (entryIdx === activeIdx) li.classList.add("active");
+            if (isExisting) li.classList.add("existing");
+            if (isPartial && !isExisting) li.classList.add("partial");
+            li.addEventListener("click", () => {
+              if (isExisting) return;
+              try { Zotero.debug(`[SUL picker] click: ${entry.code}`); } catch (e) {}
+              toggleEntry(entry, false);
+            });
+            li.addEventListener("mousemove", () => setActive(entryIdx));
+            results.appendChild(li);
           });
-          li.addEventListener("mousemove", () => setActive(i));
-          results.appendChild(li);
         });
       }
 
       function setActive(i) {
         if (!visible.length) return;
         activeIdx = Math.max(0, Math.min(i, visible.length - 1));
-        const children = results.children;
-        for (let idx = 0; idx < children.length; idx++) {
-          children[idx].classList.toggle("active", idx === activeIdx);
-        }
-        const el = children[activeIdx];
-        if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest" });
+        results.querySelectorAll("li[data-entry-index]").forEach(el => {
+          el.classList.toggle("active", parseInt(el.dataset.entryIndex) === activeIdx);
+        });
+        const activeEl = results.querySelector(`li[data-entry-index="${activeIdx}"]`);
+        if (activeEl?.scrollIntoView) activeEl.scrollIntoView({ block: "nearest" });
       }
 
       filter.addEventListener("input", () => {
@@ -512,8 +591,11 @@ SUL = {
           setActive(activeIdx - 1);
         } else if (e.key === "Enter" && e.ctrlKey) {
           e.preventDefault();
-          if (selected.size === 0) return;
-          const result = entries.filter((e) => selected.has(e.code));
+          if (selected.size === 0 && freeTextSelected.size === 0) return;
+          const result = [
+            ...allEntries.filter(e => selected.has(e.code)),
+            ...[...freeTextSelected].map(t => ({ code: t, freeText: true })),
+          ];
           if (typeof SUL.picker._currentResolve === "function") {
             SUL.picker._currentResolve(result);
           }
@@ -548,120 +630,165 @@ SUL = {
   //////////////////////////////////////////////////////////////////
 
   ddcPicker: {
-    entries: [
-      { code: "000", label: "Allgemeines, Wissenschaft" },
-      { code: "004", label: "Informatik" },
-      { code: "010", label: "Bibliografien" },
-      { code: "020", label: "Bibliotheks- und Informationswissenschaft" },
-      { code: "030", label: "Enzyklopädien" },
-      { code: "050", label: "Zeitschriften, fortlaufende Sammelwerke" },
-      { code: "060", label: "Organisationen, Museumswissenschaft" },
-      { code: "070", label: "Nachrichtenmedien, Journalismus, Verlagswesen" },
-      { code: "080", label: "Allgemeine Sammelwerke" },
-      { code: "090", label: "Handschriften, seltene Bücher" },
-
-      { code: "100", label: "Philosophie" },
-      { code: "130", label: "Parapsychologie, Okkultismus" },
-      { code: "150", label: "Psychologie" },
-
-      { code: "200", label: "Religion, Religionsphilosophie" },
-      { code: "220", label: "Bibel" },
-      { code: "230", label: "Theologie, Christentum" },
-      { code: "290", label: "Andere Religionen" },
-
-      { code: "300", label: "Sozialwissenschaften, Soziologie, Anthropologie" },
-      { code: "310", label: "Allgemeine Statistiken" },
-      { code: "320", label: "Politik" },
-      { code: "330", label: "Wirtschaft", hint: "Management → 650" },
-      { code: "333.7", label: "Natürliche Ressourcen, Energie und Umwelt" },
-      { code: "340", label: "Recht", hint: "Kriminologie, Strafvollzug → 360" },
-      { code: "350", label: "Öffentliche Verwaltung" },
-      { code: "355", label: "Militär" },
-      { code: "360", label: "Soziale Probleme, Sozialdienste, Versicherungen" },
-      { code: "370", label: "Erziehung, Schul- und Bildungswesen" },
-      { code: "380", label: "Handel, Kommunikation, Verkehr", hint: "Philatelie → 760" },
-      { code: "390", label: "Bräuche, Etikette, Folklore" },
-
-      { code: "400", label: "Sprache, Linguistik" },
-      { code: "420", label: "Englisch" },
-      { code: "430", label: "Deutsch" },
-      { code: "439", label: "Andere germanische Sprachen" },
-      { code: "440", label: "Französisch, romanische Sprachen allgemein" },
-      { code: "450", label: "Italienisch, Rumänisch, Rätoromanisch" },
-      { code: "460", label: "Spanisch, Portugiesisch" },
-      { code: "470", label: "Latein" },
-      { code: "480", label: "Griechisch" },
-      { code: "490", label: "Andere Sprachen" },
-      { code: "491.8", label: "Slawische Sprachen" },
-
-      { code: "500", label: "Naturwissenschaften" },
-      { code: "510", label: "Mathematik" },
-      { code: "520", label: "Astronomie, Kartografie" },
-      { code: "530", label: "Physik" },
-      { code: "540", label: "Chemie", hint: "Biochemie → 570" },
-      { code: "550", label: "Geowissenschaften", hint: "Kartografie, Geodäsie → 520; Kristallografie, Mineralogie → 540" },
-      { code: "560", label: "Paläontologie" },
-      { code: "570", label: "Biowissenschaften, Biologie" },
-      { code: "580", label: "Pflanzen (Botanik)" },
-      { code: "590", label: "Tiere (Zoologie)" },
-
-      { code: "600", label: "Technik" },
-      { code: "610", label: "Medizin, Gesundheit", hint: "Veterinärmedizin → 630" },
-      { code: "620", label: "Ingenieurwissenschaften und Maschinenbau" },
-      { code: "621.3", label: "Elektrotechnik, Elektronik" },
-      { code: "624", label: "Ingenieurbau und Umwelttechnik" },
-      { code: "630", label: "Landwirtschaft, Veterinärmedizin" },
-      { code: "640", label: "Hauswirtschaft und Familienleben" },
-      { code: "650", label: "Management" },
-      { code: "660", label: "Technische Chemie" },
-      { code: "670", label: "Industrielle und handwerkliche Fertigung" },
-      { code: "690", label: "Hausbau, Bauhandwerk" },
-
-      { code: "700", label: "Künste, Bildende Kunst allgemein" },
-      { code: "710", label: "Landschaftsgestaltung, Raumplanung" },
-      { code: "720", label: "Architektur" },
-      { code: "730", label: "Plastik, Numismatik, Keramik, Metallkunst" },
-      { code: "740", label: "Grafik, angewandte Kunst" },
-      { code: "741.5", label: "Comics, Cartoons, Karikaturen" },
-      { code: "750", label: "Malerei" },
-      { code: "760", label: "Druckgrafik, Drucke" },
-      { code: "770", label: "Fotografie, Video, Computerkunst" },
-      { code: "780", label: "Musik" },
-      { code: "790", label: "Freizeitgestaltung, Darstellende Kunst" },
-      { code: "791", label: "Öffentliche Darbietungen, Film, Rundfunk" },
-      { code: "792", label: "Theater, Tanz" },
-      { code: "793", label: "Spiel" },
-      { code: "796", label: "Sport" },
-
-      { code: "800", label: "Literatur, Rhetorik, Literaturwissenschaft" },
-      { code: "810", label: "Englische Literatur Amerikas" },
-      { code: "820", label: "Englische Literatur" },
-      { code: "830", label: "Deutsche Literatur" },
-      { code: "839", label: "Literatur in anderen germanischen Sprachen" },
-      { code: "840", label: "Französische Literatur" },
-      { code: "850", label: "Italienische, rumänische, rätoromanische Literatur" },
-      { code: "860", label: "Spanische und portugiesische Literatur" },
-      { code: "870", label: "Lateinische Literatur" },
-      { code: "880", label: "Griechische Literatur" },
-      { code: "890", label: "Literatur in anderen Sprachen" },
-      { code: "891.8", label: "Slawische Literatur" },
-
-      { code: "900", label: "Geschichte" },
-      { code: "910", label: "Geografie, Reisen" },
-      { code: "914.94", label: "Geografie, Reisen (Schweiz)" },
-      { code: "920", label: "Biografie, Genealogie, Heraldik" },
-      { code: "930", label: "Alte Geschichte, Archäologie" },
-      { code: "940", label: "Geschichte Europas" },
-      { code: "949.4", label: "Geschichte der Schweiz" },
-      { code: "950", label: "Geschichte Asiens" },
-      { code: "960", label: "Geschichte Afrikas" },
-      { code: "970", label: "Geschichte Nordamerikas" },
-      { code: "980", label: "Geschichte Südamerikas" },
-      { code: "990", label: "Geschichte der übrigen Welt" },
-
-      { code: "B", label: "Belletristik", hint: "nur zusätzlich zu 800-890" },
-      { code: "K", label: "Kinder- und Jugendliteratur" },
-      { code: "S", label: "Schulbücher" },
+    groups: [
+      {
+        label: "000 – Allgemeines",
+        entries: [
+          { code: "000", label: "Allgemeines, Wissenschaft" },
+          { code: "004", label: "Informatik" },
+          { code: "010", label: "Bibliografien" },
+          { code: "020", label: "Bibliotheks- und Informationswissenschaft" },
+          { code: "030", label: "Enzyklopädien" },
+          { code: "050", label: "Zeitschriften, fortlaufende Sammelwerke" },
+          { code: "060", label: "Organisationen, Museumswissenschaft" },
+          { code: "070", label: "Nachrichtenmedien, Journalismus, Verlagswesen" },
+          { code: "080", label: "Allgemeine Sammelwerke" },
+          { code: "090", label: "Handschriften, seltene Bücher" },
+        ],
+      },
+      {
+        label: "100 – Philosophie",
+        entries: [
+          { code: "100", label: "Philosophie" },
+          { code: "130", label: "Parapsychologie, Okkultismus" },
+          { code: "150", label: "Psychologie" },
+        ],
+      },
+      {
+        label: "200 – Religion",
+        entries: [
+          { code: "200", label: "Religion, Religionsphilosophie" },
+          { code: "220", label: "Bibel" },
+          { code: "230", label: "Theologie, Christentum" },
+          { code: "290", label: "Andere Religionen" },
+        ],
+      },
+      {
+        label: "300 – Sozialwissenschaften",
+        entries: [
+          { code: "300", label: "Sozialwissenschaften, Soziologie, Anthropologie" },
+          { code: "310", label: "Allgemeine Statistiken" },
+          { code: "320", label: "Politik" },
+          { code: "330", label: "Wirtschaft", hint: "Management → 650" },
+          { code: "333.7", label: "Natürliche Ressourcen, Energie und Umwelt" },
+          { code: "340", label: "Recht", hint: "Kriminologie, Strafvollzug → 360" },
+          { code: "350", label: "Öffentliche Verwaltung" },
+          { code: "355", label: "Militär" },
+          { code: "360", label: "Soziale Probleme, Sozialdienste, Versicherungen" },
+          { code: "370", label: "Erziehung, Schul- und Bildungswesen" },
+          { code: "380", label: "Handel, Kommunikation, Verkehr", hint: "Philatelie → 760" },
+          { code: "390", label: "Bräuche, Etikette, Folklore" },
+        ],
+      },
+      {
+        label: "400 – Sprache",
+        entries: [
+          { code: "400", label: "Sprache, Linguistik" },
+          { code: "420", label: "Englisch" },
+          { code: "430", label: "Deutsch" },
+          { code: "439", label: "Andere germanische Sprachen" },
+          { code: "440", label: "Französisch, romanische Sprachen allgemein" },
+          { code: "450", label: "Italienisch, Rumänisch, Rätoromanisch" },
+          { code: "460", label: "Spanisch, Portugiesisch" },
+          { code: "470", label: "Latein" },
+          { code: "480", label: "Griechisch" },
+          { code: "490", label: "Andere Sprachen" },
+          { code: "491.8", label: "Slawische Sprachen" },
+        ],
+      },
+      {
+        label: "500 – Naturwissenschaften",
+        entries: [
+          { code: "500", label: "Naturwissenschaften" },
+          { code: "510", label: "Mathematik" },
+          { code: "520", label: "Astronomie, Kartografie" },
+          { code: "530", label: "Physik" },
+          { code: "540", label: "Chemie", hint: "Biochemie → 570" },
+          { code: "550", label: "Geowissenschaften", hint: "Kartografie, Geodäsie → 520; Kristallografie, Mineralogie → 540" },
+          { code: "560", label: "Paläontologie" },
+          { code: "570", label: "Biowissenschaften, Biologie" },
+          { code: "580", label: "Pflanzen (Botanik)" },
+          { code: "590", label: "Tiere (Zoologie)" },
+        ],
+      },
+      {
+        label: "600 – Technik",
+        entries: [
+          { code: "600", label: "Technik" },
+          { code: "610", label: "Medizin, Gesundheit", hint: "Veterinärmedizin → 630" },
+          { code: "620", label: "Ingenieurwissenschaften und Maschinenbau" },
+          { code: "621.3", label: "Elektrotechnik, Elektronik" },
+          { code: "624", label: "Ingenieurbau und Umwelttechnik" },
+          { code: "630", label: "Landwirtschaft, Veterinärmedizin" },
+          { code: "640", label: "Hauswirtschaft und Familienleben" },
+          { code: "650", label: "Management" },
+          { code: "660", label: "Technische Chemie" },
+          { code: "670", label: "Industrielle und handwerkliche Fertigung" },
+          { code: "690", label: "Hausbau, Bauhandwerk" },
+        ],
+      },
+      {
+        label: "700 – Künste",
+        entries: [
+          { code: "700", label: "Künste, Bildende Kunst allgemein" },
+          { code: "710", label: "Landschaftsgestaltung, Raumplanung" },
+          { code: "720", label: "Architektur" },
+          { code: "730", label: "Plastik, Numismatik, Keramik, Metallkunst" },
+          { code: "740", label: "Grafik, angewandte Kunst" },
+          { code: "741.5", label: "Comics, Cartoons, Karikaturen" },
+          { code: "750", label: "Malerei" },
+          { code: "760", label: "Druckgrafik, Drucke" },
+          { code: "770", label: "Fotografie, Video, Computerkunst" },
+          { code: "780", label: "Musik" },
+          { code: "790", label: "Freizeitgestaltung, Darstellende Kunst" },
+          { code: "791", label: "Öffentliche Darbietungen, Film, Rundfunk" },
+          { code: "792", label: "Theater, Tanz" },
+          { code: "793", label: "Spiel" },
+          { code: "796", label: "Sport" },
+        ],
+      },
+      {
+        label: "800 – Literatur",
+        entries: [
+          { code: "800", label: "Literatur, Rhetorik, Literaturwissenschaft" },
+          { code: "810", label: "Englische Literatur Amerikas" },
+          { code: "820", label: "Englische Literatur" },
+          { code: "830", label: "Deutsche Literatur" },
+          { code: "839", label: "Literatur in anderen germanischen Sprachen" },
+          { code: "840", label: "Französische Literatur" },
+          { code: "850", label: "Italienische, rumänische, rätoromanische Literatur" },
+          { code: "860", label: "Spanische und portugiesische Literatur" },
+          { code: "870", label: "Lateinische Literatur" },
+          { code: "880", label: "Griechische Literatur" },
+          { code: "890", label: "Literatur in anderen Sprachen" },
+          { code: "891.8", label: "Slawische Literatur" },
+        ],
+      },
+      {
+        label: "900 – Geschichte",
+        entries: [
+          { code: "900", label: "Geschichte" },
+          { code: "910", label: "Geografie, Reisen" },
+          { code: "914.94", label: "Geografie, Reisen (Schweiz)" },
+          { code: "920", label: "Biografie, Genealogie, Heraldik" },
+          { code: "930", label: "Alte Geschichte, Archäologie" },
+          { code: "940", label: "Geschichte Europas" },
+          { code: "949.4", label: "Geschichte der Schweiz" },
+          { code: "950", label: "Geschichte Asiens" },
+          { code: "960", label: "Geschichte Afrikas" },
+          { code: "970", label: "Geschichte Nordamerikas" },
+          { code: "980", label: "Geschichte Südamerikas" },
+          { code: "990", label: "Geschichte der übrigen Welt" },
+        ],
+      },
+      {
+        label: "Sonstige",
+        entries: [
+          { code: "B", label: "Belletristik", hint: "nur zusätzlich zu 800-890" },
+          { code: "K", label: "Kinder- und Jugendliteratur" },
+          { code: "S", label: "Schulbücher" },
+        ],
+      },
     ],
 
     async pickAndApply() {
@@ -696,7 +823,7 @@ SUL = {
       const title = items.length === 1 ? "DDC-Tag wählen" : `DDC-Tag wählen (${items.length} Titel)`;
       const choices = await SUL.picker.show({
         title,
-        entries: SUL.ddcPicker.entries,
+        groups: SUL.ddcPicker.groups,
         existingCodes: allHaveCodes,
         partialCodes: someHaveCodes,
         itemCount: items.length,
@@ -720,6 +847,106 @@ SUL = {
 
   //////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////
+  // BC PICKER
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+
+  bcPicker: {
+    groups: [
+      {
+        label: "Print / Verfügbarkeit",
+        entries: [
+          { code: "MEX",  label: "Auch wenn eBook oder Print in Kurierbibl. vorhanden" },
+          { code: "MEXo", label: "Auch wenn eBook in Kurierbibl. vorhanden" },
+          { code: "MEXp", label: "Auch wenn Print in Kurierbibl. vorhanden" },
+          { code: "UBE",  label: "Nur wenn nirgends in UB Bern vorhanden" },
+          { code: "SLSP", label: "Nur wenn schweizweit in keiner SLSP-Bibl. ausleihbar" },
+        ],
+      },
+      {
+        label: "E-Book",
+        entries: [
+          { code: "E1",   label: "1-user" },
+          { code: "E1p",  label: "1-user, auch wenn Print vorhanden" },
+          { code: "E1s",  label: "1-user + NZ-Katalogisat" },
+          { code: "E1ps", label: "1-user, auch wenn Print + NZ-Katalogisat" },
+          { code: "E3",   label: "3-user" },
+          { code: "E3p",  label: "3-user, auch wenn Print vorhanden" },
+          { code: "E3s",  label: "3-user + NZ-Katalogisat" },
+          { code: "E3ps", label: "3-user, auch wenn Print + NZ-Katalogisat" },
+          { code: "E+",   label: "Unlimited" },
+          { code: "E+p",  label: "Unlimited, auch wenn Print vorhanden" },
+          { code: "E+s",  label: "Unlimited + NZ-Katalogisat" },
+          { code: "E+ps", label: "Unlimited, auch wenn Print + NZ-Katalogisat" },
+          { code: "OA",   label: "OA-Katalogisat erstellen (keine Erwerbung)" },
+        ],
+      },
+      {
+        label: "Bernensia",
+        entries: [
+          { code: "Ausleihe",                label: "1 Exemplar: Ausleihe (UB-Speicher)" },
+          { code: "Ausleihe+Archiv",         label: "2 Exemplare: Ausleihe + Archiv (BMü-Sonderlesesaal)" },
+          { code: "Ausleihe+Archiv+Ansicht", label: "3 Exemplare: Ausleihe + Archiv + Ansicht (Bernensia-Bibl.)" },
+          { code: "bb",                      label: "Berner Belletristik" },
+        ],
+      },
+    ],
+
+    async pickAndApply() {
+      const ZoteroPane = Zotero.getActiveZoteroPane();
+      const items = ZoteroPane.getSelectedItems();
+      if (!items.length) {
+        SUL.log("bcPicker: no items selected");
+        return;
+      }
+      const allHaveCodes = new Set();
+      const someHaveCodes = new Set();
+      if (items.length === 1) {
+        items[0].getTags().forEach(t => {
+          if (t.tag.startsWith("BC ")) allHaveCodes.add(t.tag.substring(3));
+        });
+      } else {
+        const perItem = items.map(item =>
+          new Set(item.getTags().filter(t => t.tag.startsWith("BC ")).map(t => t.tag.substring(3)))
+        );
+        const allCodes = new Set(perItem.flatMap(s => [...s]));
+        allCodes.forEach(code => {
+          const count = perItem.filter(s => s.has(code)).length;
+          if (count === items.length) {
+            allHaveCodes.add(code);
+          } else {
+            someHaveCodes.add(code);
+          }
+        });
+      }
+      const title = items.length === 1 ? "Bestellcode wählen" : `Bestellcode wählen (${items.length} Titel)`;
+      const choices = await SUL.picker.show({
+        title,
+        groups: SUL.bcPicker.groups,
+        allowFreeText: true,
+        existingCodes: allHaveCodes,
+        partialCodes: someHaveCodes,
+        itemCount: items.length,
+      });
+      if (!choices) {
+        SUL.log("bcPicker: cancelled");
+        return;
+      }
+      const tags = choices.map(e => `BC ${e.code}`);
+      await Zotero.DB.executeTransaction(async () => {
+        for (const item of items) {
+          for (const tag of tags) {
+            item.addTag(tag, 0);
+          }
+          await item.save();
+        }
+      });
+      SUL.log(`bcPicker: added ${tags.join(", ")} to ${items.length} item(s)`);
+    },
+  },
+
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
   // LOCATION LOOKUP FUNCTIONS
   //////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////
@@ -738,7 +965,7 @@ SUL = {
 
     async processItem(item) {
       const isbns = SUL.locationLookup.getIsbns(item);
-      
+
       if (!isbns.length || !isbns.some(SUL.helpers.isValidIsbn)) {
         const itemStatus = {
           isInUBBe: false,
@@ -769,7 +996,7 @@ SUL = {
       SUL.locationLookup.ApplyTags(item, itemStatus);
       SUL.locationLookup.updateTargetField(item, SUL.targetField, holdingsFormatted);
     },
-    
+
     async processItemData(responseXML) {
       if (SUL.locationLookup.noResultsFound(responseXML)) {
         return SUL.locationLookup.createNoResultsResponse();
@@ -913,8 +1140,8 @@ SUL = {
           holding.eholdingAvailability,
           holding.eholdingZonesString,
           holding.eholdingPackage
-        ].filter(part => part); // Filter out empty strings
-        formattedHoldings.push(parts.join(", ")); // Join non-empty parts with commas
+        ].filter(part => part);
+        formattedHoldings.push(parts.join(", "));
         if (holding.eholdingAvailability === "Online verfügbar") {
           if (!holding.eholdingPackage.includes("TEMP")) {
             itemStatus.isInUBBeOnline = true;
@@ -927,7 +1154,7 @@ SUL = {
       const formattedResult = formattedHoldings.length > 0 ? formattedHoldings.join("\n") : "Keine elektronischen Bestände vorhanden";
       return { formattedResult, itemStatus };
     },
-    
+
 
     getElectronicHoldingsData(responseXML) {
       let holdings = [];
@@ -942,13 +1169,13 @@ SUL = {
     },
 
     getElectronicHoldingData(holding) {
-      const eholdingAvailability = holding.querySelector("subfield[code='e']")?.textContent === "Available" 
+      const eholdingAvailability = holding.querySelector("subfield[code='e']")?.textContent === "Available"
         ? "Online verfügbar" : "Online nicht verfügbar";
       const eholdingZonesString = this.getAllowedAccessZonesString(
         Array.from(holding.querySelectorAll("subfield[code='b']"))?.map(zone => zone?.textContent) || []
       );
-      const eholdingPackage = holding.querySelector("subfield[code='m']") 
-        ? holding.querySelector("subfield[code='m']").textContent 
+      const eholdingPackage = holding.querySelector("subfield[code='m']")
+        ? holding.querySelector("subfield[code='m']").textContent
         : "ohne Paketinfos";
       return { eholdingAvailability, eholdingZonesString, eholdingPackage };
     },
@@ -968,7 +1195,7 @@ SUL = {
       }
       return "andere Verfügbarkeiten"; // this should not happen
     },
-    
+
 
     updateTargetField(item, field, holdings) {
       const currentDate = new Date().toLocaleString();

@@ -10,6 +10,9 @@ itemmenu-orderNoteToAbstract =
 itemmenu-pickDDC =
     .label = Add DDC tag…
 
+itemmenu-pickBC =
+    .label = Choose order code…
+
 preferences-abstractNote =
     .label = Abstract
 
