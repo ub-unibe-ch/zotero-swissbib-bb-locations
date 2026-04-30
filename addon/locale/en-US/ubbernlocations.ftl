@@ -27,3 +27,14 @@ itemmenu-clearOrderNotes =
 
 preferences-debug =
     .label = Debug mode (append timestamps to entries)
+
+preferences-shortcuts =
+    .label = Keyboard Shortcuts
+
+preferences-shortcutHint = Format: comma-separated modifiers, e.g. accel,alt,K. Available: accel (Ctrl/⌘), alt, shift. Leave empty to disable the shortcut.
+
+preferences-shortcutDDC =
+    .value = DDC Picker
+
+preferences-shortcutBC =
+    .value = BC Picker
