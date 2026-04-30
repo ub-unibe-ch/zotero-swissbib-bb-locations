@@ -911,7 +911,7 @@ SUL = {
         label: "Print / Verfügbarkeit",
         entries: [
           { code: "MEX",  label: "Auch wenn eBook oder Print in Kurierbibl. vorhanden" },
-          { code: "MEXo", label: "Auch wenn eBook in Kurierbibl. vorhanden" },
+          { code: "MEXo", label: "Auch wenn eBook vorhanden" },
           { code: "MEXp", label: "Auch wenn Print in Kurierbibl. vorhanden" },
           { code: "UBE",  label: "Nur wenn nirgends in UB Bern vorhanden" },
           { code: "SLSP", label: "Nur wenn schweizweit in keiner SLSP-Bibl. ausleihbar" },
