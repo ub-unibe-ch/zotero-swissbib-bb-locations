@@ -23,13 +23,16 @@ async function startup({ id, version, rootURI }) {
 			src: rootURI + 'content/prefs.xhtml',
 			//scripts: [rootURI + 'preferences.js'],
 		});
-		
+
 		Services.scriptloader.loadSubScript(rootURI + 'swisscoveryubbernlocations.js');
 
 		SUL.init({ id, version, rootURI });
 		SUL.registerMenu();
 		for (const win of Zotero.getMainWindows()) {
-			if (win.ZoteroPane) SUL.ensureFTL(win);
+			if (win.ZoteroPane) {
+				SUL.ensureFTL(win);
+				SUL.registerShortcuts(win);
+			}
 		}
 	} catch (error) {
 		log("Error during startup");
@@ -40,6 +43,7 @@ async function startup({ id, version, rootURI }) {
 function onMainWindowLoad({ window }) {
 	try {
 		SUL.ensureFTL(window);
+		SUL.registerShortcuts(window);
 	} catch (error) {
 		log("Error while loading main window");
 		log(error);
@@ -49,6 +53,9 @@ function onMainWindowLoad({ window }) {
 function shutdown() {
 	try {
 		log("Shutting down");
+		for (const win of Zotero.getMainWindows()) {
+			if (win.ZoteroPane) SUL.unregisterShortcuts(win);
+		}
 		SUL.unregisterMenu();
 		SUL = undefined;
 	} catch (error) {

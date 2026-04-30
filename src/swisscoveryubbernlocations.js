@@ -25,6 +25,7 @@ SUL = {
   rootURI: null,
   initialized: false,
   menuID: null,
+  _shortcutHandlers: new WeakMap(),
   ftlFilename: "zoteroswisscoveryubbernlocations-ubbernlocations.ftl",
 
   init({ id, version, rootURI }) {
@@ -43,6 +44,12 @@ SUL = {
   },
   get targetField() {
     return Pref.targetField;
+  },
+  get shortcutDDC() {
+    return Pref.get("shortcutDDC");
+  },
+  get shortcutBC() {
+    return Pref.get("shortcutBC");
   },
 
   kurierbibliothekenUBBe: [
@@ -120,6 +127,53 @@ SUL = {
     if (this.menuID) {
       Zotero.MenuManager.unregisterMenu(this.menuID);
       this.menuID = null;
+    }
+  },
+
+  parseShortcut(prefValue) {
+    if (!prefValue) return null;
+    const parts = prefValue.split(",").map(s => s.trim().toLowerCase());
+    const result = { accel: false, alt: false, shift: false, key: "" };
+    for (const part of parts) {
+      if (part === "accel") result.accel = true;
+      else if (part === "alt") result.alt = true;
+      else if (part === "shift") result.shift = true;
+      else result.key = part.toUpperCase();
+    }
+    return result.key ? result : null;
+  },
+
+  matchShortcut(parsed, e) {
+    const accel = Zotero.isMac ? e.metaKey : e.ctrlKey;
+    return parsed.accel === accel
+      && parsed.alt === e.altKey
+      && parsed.shift === e.shiftKey
+      && parsed.key === e.key.toUpperCase();
+  },
+
+  registerShortcuts(win) {
+    const handler = (e) => {
+      const ddc = SUL.parseShortcut(SUL.shortcutDDC);
+      const bc = SUL.parseShortcut(SUL.shortcutBC);
+      if (ddc && SUL.matchShortcut(ddc, e)) {
+        e.preventDefault();
+        e.stopPropagation();
+        SUL.ddcPicker.pickAndApply();
+      } else if (bc && SUL.matchShortcut(bc, e)) {
+        e.preventDefault();
+        e.stopPropagation();
+        SUL.bcPicker.pickAndApply();
+      }
+    };
+    win.addEventListener("keydown", handler, true);
+    SUL._shortcutHandlers.set(win, handler);
+  },
+
+  unregisterShortcuts(win) {
+    const handler = SUL._shortcutHandlers.get(win);
+    if (handler) {
+      win.removeEventListener("keydown", handler, true);
+      SUL._shortcutHandlers.delete(win);
     }
   },
 
