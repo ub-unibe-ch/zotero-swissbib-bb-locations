@@ -487,9 +487,10 @@ SUL = {
         visible = [];
         results.replaceChildren();
 
-        const hasCodeMatch = q && allGroups.some(g =>
-          (g.entries || []).some(e => String(e.code).toLowerCase().startsWith(q))
-        );
+        // When the query matches a code prefix, suppress label matches —
+        // users typing a code (digits for DDC, letter-prefix for BC) expect
+        // pure code hits, not labels that happen to contain the same characters.
+        const hasCodeMatch = q && allEntries.some(e => String(e.code).toLowerCase().startsWith(q));
         const filteredGroups = allGroups.map(g => ({
           label: g.label,
           entries: !q
