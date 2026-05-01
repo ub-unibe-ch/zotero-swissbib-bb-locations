@@ -1,5 +1,12 @@
 # Änderungen
 
+## v0.5.0
+- **Feature**: DDC-Tag-Picker mit DNB-CH-Klassifikation — searchable Dialog mit Multi-Select über alle markierten Items
+- **Feature**: BC-Tag-Picker (Bestellcodes) mit Freitext-Fallback für seltene Codes
+- **Feature**: Konfigurierbare Keyboard-Shortcuts für beide Picker (default `Ctrl+Alt+D` / `Ctrl+Alt+B`)
+- **Feature**: Preference-Pane mit Key-Capture-Input zum Rebinding der Shortcuts
+- Multi-Item-Picker zeigt bereits vergebene (●) und teilweise vergebene (◔) Codes inline an
+
 ## v0.4.0
 - **Breaking**: Zotero 7 wird nicht mehr unterstützt (`strict_min_version = "8.0"`)
 - Menüregistrierung auf `Zotero.MenuManager` umgestellt (deklarativ, fenster­übergreifend, automatisches Cleanup)

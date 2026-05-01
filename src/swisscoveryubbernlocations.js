@@ -1,3 +1,11 @@
+const ddcData = require("./data/ddc-codes.js");
+const bcData = require("./data/bc-codes.js");
+const pickerCSS = require("./picker.css");
+
+function debug(msg) {
+  try { Zotero.debug(msg); } catch (e) {}
+}
+
 // Preference utility wrapper
 const PREFS_PREFIX = "extensions.swisscoveryubbernlocations.";
 const DEFAULTS = globalThis.__PREF_DEFAULTS__ || {};
@@ -25,6 +33,7 @@ SUL = {
   rootURI: null,
   initialized: false,
   menuID: null,
+  _shortcutHandlers: new WeakMap(),
   ftlFilename: "zoteroswisscoveryubbernlocations-ubbernlocations.ftl",
 
   init({ id, version, rootURI }) {
@@ -43,6 +52,12 @@ SUL = {
   },
   get targetField() {
     return Pref.targetField;
+  },
+  get shortcutDDC() {
+    return Pref.get("shortcutDDC");
+  },
+  get shortcutBC() {
+    return Pref.get("shortcutBC");
   },
 
   kurierbibliothekenUBBe: [
@@ -96,6 +111,16 @@ SUL = {
             },
             {
               menuType: "menuitem",
+              l10nID: "zoteroswisscoveryubbernlocations-itemmenu-pickDDC",
+              onCommand: () => SUL.ddcPicker.pickAndApply(),
+            },
+            {
+              menuType: "menuitem",
+              l10nID: "zoteroswisscoveryubbernlocations-itemmenu-pickBC",
+              onCommand: () => SUL.bcPicker.pickAndApply(),
+            },
+            {
+              menuType: "menuitem",
               l10nID: "zoteroswisscoveryubbernlocations-itemmenu-clearOrderNotes",
               onShowing: (event, context) => context.setVisible(Pref.debug),
               onCommand: () => SUL.orderNote.clearOrderNotes(),
@@ -110,6 +135,53 @@ SUL = {
     if (this.menuID) {
       Zotero.MenuManager.unregisterMenu(this.menuID);
       this.menuID = null;
+    }
+  },
+
+  parseShortcut(prefValue) {
+    if (!prefValue) return null;
+    const parts = prefValue.split(",").map(s => s.trim().toLowerCase());
+    const result = { accel: false, alt: false, shift: false, key: "" };
+    for (const part of parts) {
+      if (part === "accel") result.accel = true;
+      else if (part === "alt") result.alt = true;
+      else if (part === "shift") result.shift = true;
+      else result.key = part.toUpperCase();
+    }
+    return result.key ? result : null;
+  },
+
+  matchShortcut(parsed, e) {
+    const accel = Zotero.isMac ? e.metaKey : e.ctrlKey;
+    return parsed.accel === accel
+      && parsed.alt === e.altKey
+      && parsed.shift === e.shiftKey
+      && parsed.key === e.key.toUpperCase();
+  },
+
+  registerShortcuts(win) {
+    const handler = (e) => {
+      const ddc = SUL.parseShortcut(SUL.shortcutDDC);
+      const bc = SUL.parseShortcut(SUL.shortcutBC);
+      if (ddc && SUL.matchShortcut(ddc, e)) {
+        e.preventDefault();
+        e.stopPropagation();
+        SUL.ddcPicker.pickAndApply();
+      } else if (bc && SUL.matchShortcut(bc, e)) {
+        e.preventDefault();
+        e.stopPropagation();
+        SUL.bcPicker.pickAndApply();
+      }
+    };
+    win.addEventListener("keydown", handler, true);
+    SUL._shortcutHandlers.set(win, handler);
+  },
+
+  unregisterShortcuts(win) {
+    const handler = SUL._shortcutHandlers.get(win);
+    if (handler) {
+      win.removeEventListener("keydown", handler, true);
+      SUL._shortcutHandlers.delete(win);
     }
   },
 
@@ -198,6 +270,456 @@ SUL = {
 
   //////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////
+  // PICKER (generic search-and-pick dialog)
+  // Accepts flat `entries` (legacy) or `groups: [{label, entries}]`.
+  // Pass `allowFreeText: true` to enable free-text fallback.
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+
+  picker: {
+    show({ title, entries, groups, allowFreeText, existingCodes, partialCodes, itemCount }) {
+      return new Promise((resolve) => {
+        let resolved = false;
+        const safeResolve = (val) => {
+          if (resolved) return;
+          resolved = true;
+          debug(`[SUL picker] resolve: ${JSON.stringify(val)}`);
+          resolve(val);
+        };
+        const win = Zotero.getMainWindow();
+        const normalizedGroups = groups || (entries ? [{ label: null, entries }] : []);
+        const io = {
+          title,
+          groups: normalizedGroups,
+          allowFreeText: !!allowFreeText,
+          existingCodes: existingCodes || new Set(),
+          partialCodes: partialCodes || new Set(),
+          itemCount: itemCount || 1,
+          result: null,
+        };
+        const dialog = win.openDialog(
+          "about:blank",
+          "sul-picker",
+          "centerscreen,resizable=yes,dependent=yes,width=420,height=500",
+          io,
+        );
+        dialog.addEventListener(
+          "DOMContentLoaded",
+          () => {
+            debug(`[SUL picker] DOMContentLoaded`);
+            SUL.picker.build(dialog, safeResolve);
+            dialog.addEventListener(
+              "unload",
+              () => {
+                debug(`[SUL picker] unload (safety net)`);
+                safeResolve(null);
+              },
+              { once: true },
+            );
+          },
+          { once: true },
+        );
+      });
+    },
+
+    buildDOM(doc, io) {
+      const allowFreeText = !!io.allowFreeText;
+
+      const style = doc.createElement("style");
+      style.textContent = pickerCSS;
+      doc.head.appendChild(style);
+
+      const filter = doc.createElement("input");
+      filter.id = "sul-filter";
+      filter.type = "text";
+      filter.placeholder = allowFreeText ? "Filter / Freitext…" : "Filter…";
+      doc.body.appendChild(filter);
+
+      const results = doc.createElement("ul");
+      results.id = "sul-results";
+      doc.body.appendChild(results);
+
+      const footer = doc.createElement("div");
+      footer.id = "sul-footer";
+      const existingRow = doc.createElement("div");
+      existingRow.id = "sul-footer-existing";
+      existingRow.className = "sul-footer-row";
+      existingRow.style.display = "none";
+      const existingLabel = doc.createElement("span");
+      existingLabel.className = "sul-footer-label";
+      existingLabel.textContent = io.itemCount > 1 ? "Vergeben (alle):" : "Vergeben:";
+      const existingTags = doc.createElement("span");
+      existingTags.id = "sul-footer-existing-tags";
+      existingRow.appendChild(existingLabel);
+      existingRow.appendChild(existingTags);
+      footer.appendChild(existingRow);
+      const partialRow = doc.createElement("div");
+      partialRow.id = "sul-footer-partial";
+      partialRow.className = "sul-footer-row";
+      partialRow.style.display = "none";
+      const partialLabel = doc.createElement("span");
+      partialLabel.className = "sul-footer-label";
+      partialLabel.textContent = "Vergeben (teilweise):";
+      const partialTags = doc.createElement("span");
+      partialTags.id = "sul-footer-partial-tags";
+      partialRow.appendChild(partialLabel);
+      partialRow.appendChild(partialTags);
+      footer.appendChild(partialRow);
+      const selectedRow = doc.createElement("div");
+      selectedRow.className = "sul-footer-row";
+      const footerLabel = doc.createElement("span");
+      footerLabel.className = "sul-footer-label";
+      footerLabel.textContent = "Auswahl:";
+      const footerTags = doc.createElement("span");
+      footerTags.id = "sul-footer-tags";
+      selectedRow.appendChild(footerLabel);
+      selectedRow.appendChild(footerTags);
+      footer.appendChild(selectedRow);
+      const hint = doc.createElement("div");
+      hint.id = "sul-footer-hint";
+      const legend = doc.createElement("div");
+      legend.textContent = "✓ ausgewählt · ● alle haben es · ◔ manche haben es";
+      const keys = doc.createElement("div");
+      keys.textContent = "Enter: wählen · Shift+Enter: wählen + Filter löschen · Ctrl+Enter: übernehmen · Esc: abbrechen";
+      hint.appendChild(legend);
+      hint.appendChild(keys);
+      footer.appendChild(hint);
+      doc.body.appendChild(footer);
+
+      return {
+        filter,
+        results,
+        footer: { existingRow, existingTags, partialRow, partialTags, footerTags },
+      };
+    },
+
+    build(dialog, safeResolve) {
+      const io = dialog.arguments[0];
+      const doc = dialog.document;
+      const baseTitle = io.title || "";
+      if (baseTitle) doc.title = baseTitle;
+
+      const allGroups = Array.isArray(io.groups) ? io.groups : [];
+      const allEntries = allGroups.flatMap(g => g.entries || []);
+      const allowFreeText = !!io.allowFreeText;
+
+      const { filter, results, footer } = SUL.picker.buildDOM(doc, io);
+      const { existingRow, existingTags, partialRow, partialTags, footerTags } = footer;
+
+      const existingCodes = io.existingCodes instanceof Set ? io.existingCodes : new Set(io.existingCodes || []);
+      const partialCodes = io.partialCodes instanceof Set ? io.partialCodes : new Set(io.partialCodes || []);
+      const picked = new Map(); // key: code-or-text, value: {freeText?: boolean}
+      let visible = [];
+      let activeIdx = 0;
+
+      function updateTitle() {
+        const n = picked.size;
+        doc.title = n > 0 ? `${baseTitle} (${n} ausgewählt)` : baseTitle;
+      }
+
+      function toggleEntry(entry, resetFilter) {
+        if (entry.freeTextCandidate) {
+          const text = filter.value.trim();
+          if (text) {
+            picked.set(text, { freeText: true });
+            filter.value = "";
+            activeIdx = 0;
+            updateTitle();
+            updateFooter();
+            render();
+            filter.focus();
+          }
+          return;
+        }
+        if (existingCodes.has(entry.code)) return;
+        if (picked.has(entry.code)) {
+          picked.delete(entry.code);
+        } else {
+          picked.set(entry.code, {});
+        }
+        updateTitle();
+        updateFooter();
+        if (resetFilter) {
+          filter.value = "";
+          activeIdx = 0;
+        }
+        render();
+        filter.focus();
+      }
+
+      function renderChipRow(rowEl, containerEl, chips, extraClass, fallback) {
+        containerEl.replaceChildren();
+        if (chips.length === 0) {
+          if (rowEl) rowEl.style.display = "none";
+          if (fallback != null) containerEl.textContent = fallback;
+          return;
+        }
+        if (rowEl) rowEl.style.display = "";
+        for (const text of chips) {
+          const chip = doc.createElement("span");
+          chip.className = extraClass ? `sul-footer-tag ${extraClass}` : "sul-footer-tag";
+          chip.textContent = text;
+          containerEl.appendChild(chip);
+        }
+      }
+
+      function updateFooter() {
+        const selectedChips = [...picked.keys()];
+        renderChipRow(null, footerTags, selectedChips, null, "—");
+
+        renderChipRow(
+          existingRow,
+          existingTags,
+          allEntries.filter(e => existingCodes.has(e.code)).map(e => e.code),
+          "sul-footer-existing-tag",
+        );
+
+        renderChipRow(
+          partialRow,
+          partialTags,
+          allEntries.filter(e => partialCodes.has(e.code)).map(e => e.code),
+          "sul-footer-partial-tag",
+        );
+      }
+
+      function render() {
+        const q = filter.value.trim().toLowerCase();
+        visible = [];
+        results.replaceChildren();
+
+        // When the query matches a code prefix, suppress label matches —
+        // users typing a code (digits for DDC, letter-prefix for BC) expect
+        // pure code hits, not labels that happen to contain the same characters.
+        const hasCodeMatch = q && allEntries.some(e => String(e.code).toLowerCase().startsWith(q));
+        const filteredGroups = allGroups.map(g => ({
+          label: g.label,
+          entries: !q
+            ? (g.entries || []).slice()
+            : (g.entries || []).filter(e =>
+                hasCodeMatch
+                  ? String(e.code).toLowerCase().startsWith(q)
+                  : String(e.label).toLowerCase().includes(q)
+              ),
+        })).filter(g => g.entries.length > 0);
+
+        if (filteredGroups.length === 0) {
+          if (allowFreeText && q) {
+            const entry = { code: q, label: `"${q}" hinzufügen`, freeTextCandidate: true };
+            visible = [entry];
+            activeIdx = 0;
+            const li = doc.createElement("li");
+            li.className = "add-freetext active";
+            li.dataset.entryIndex = "0";
+            li.textContent = `+ "${q}" hinzufügen`;
+            li.addEventListener("click", () => toggleEntry(entry, false));
+            results.appendChild(li);
+          } else {
+            const li = doc.createElement("li");
+            li.className = "empty";
+            li.textContent = "Keine Treffer";
+            results.appendChild(li);
+          }
+          return;
+        }
+
+        const totalEntries = filteredGroups.reduce((n, g) => n + g.entries.length, 0);
+        if (activeIdx >= totalEntries) activeIdx = 0;
+
+        filteredGroups.forEach(group => {
+          if (group.label) {
+            const header = doc.createElement("li");
+            header.className = "group-header";
+            header.textContent = group.label;
+            results.appendChild(header);
+          }
+          group.entries.forEach(entry => {
+            const entryIdx = visible.length;
+            visible.push(entry);
+            const li = doc.createElement("li");
+            li.dataset.entryIndex = String(entryIdx);
+            const isExisting = existingCodes.has(entry.code);
+            const isPartial = partialCodes.has(entry.code);
+            const mark = doc.createElement("span");
+            mark.className = "sul-mark";
+            if (picked.has(entry.code)) {
+              mark.classList.add("selected");
+              mark.textContent = "✓";
+            } else if (isExisting) {
+              mark.classList.add("existing");
+              mark.textContent = "●";
+            } else if (isPartial) {
+              mark.classList.add("partial");
+              mark.textContent = "◔";
+            } else {
+              mark.textContent = "✓";
+              mark.style.visibility = "hidden";
+            }
+            const body = doc.createElement("span");
+            body.className = "sul-entry-body";
+            const code = doc.createElement("span");
+            code.className = "sul-code";
+            code.textContent = entry.code;
+            body.appendChild(code);
+            if (entry.label) {
+              const label = doc.createElement("span");
+              label.className = "sul-label";
+              label.textContent = entry.label;
+              body.appendChild(label);
+            }
+            if (entry.hint) {
+              const hintEl = doc.createElement("span");
+              hintEl.className = "sul-hint";
+              hintEl.textContent = entry.hint;
+              body.appendChild(hintEl);
+            }
+            li.appendChild(mark);
+            li.appendChild(body);
+            if (entryIdx === activeIdx) li.classList.add("active");
+            if (isExisting) li.classList.add("existing");
+            if (isPartial && !isExisting) li.classList.add("partial");
+            li.addEventListener("click", () => {
+              if (isExisting) return;
+              debug(`[SUL picker] click: ${entry.code}`);
+              toggleEntry(entry, false);
+            });
+            li.addEventListener("mousemove", () => setActive(entryIdx));
+            results.appendChild(li);
+          });
+        });
+      }
+
+      function setActive(i) {
+        if (!visible.length) return;
+        activeIdx = Math.max(0, Math.min(i, visible.length - 1));
+        results.querySelectorAll("li[data-entry-index]").forEach(el => {
+          el.classList.toggle("active", parseInt(el.dataset.entryIndex) === activeIdx);
+        });
+        const activeEl = results.querySelector(`li[data-entry-index="${activeIdx}"]`);
+        if (activeEl?.scrollIntoView) activeEl.scrollIntoView({ block: "nearest" });
+      }
+
+      filter.addEventListener("input", () => {
+        activeIdx = 0;
+        render();
+      });
+      filter.addEventListener("keydown", (e) => {
+        debug(`[SUL picker] keydown: ${e.key} ctrl=${e.ctrlKey}`);
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setActive(activeIdx + 1);
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setActive(activeIdx - 1);
+        } else if (e.key === "Enter" && e.ctrlKey) {
+          e.preventDefault();
+          if (picked.size === 0) return;
+          const result = [...picked].map(([code, meta]) =>
+            meta.freeText ? { code, freeText: true } : { code }
+          );
+          safeResolve(result);
+          try { dialog.close(); } catch (err) {}
+        } else if (e.key === "Enter" && e.shiftKey) {
+          e.preventDefault();
+          if (!visible.length) return;
+          toggleEntry(visible[activeIdx], true);
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          if (!visible.length) return;
+          toggleEntry(visible[activeIdx], false);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          safeResolve(null);
+          try { dialog.close(); } catch (err) {}
+        }
+      });
+
+      render();
+      updateFooter();
+      filter.focus();
+    },
+
+    collectExistingCodes(items, prefix) {
+      const existing = new Set();
+      const partial = new Set();
+      const perItem = items.map(item =>
+        new Set(
+          item.getTags()
+            .filter(t => t.tag.startsWith(prefix))
+            .map(t => t.tag.substring(prefix.length))
+        )
+      );
+      const allCodes = new Set(perItem.flatMap(s => [...s]));
+      allCodes.forEach(code => {
+        const count = perItem.filter(s => s.has(code)).length;
+        if (count === items.length) existing.add(code);
+        else partial.add(code);
+      });
+      return { existing, partial };
+    },
+
+    async pickAndApply({ prefix, titleSingular, titlePlural, groups, allowFreeText }) {
+      const items = Zotero.getActiveZoteroPane().getSelectedItems();
+      if (!items.length) return;
+      const { existing, partial } = SUL.picker.collectExistingCodes(items, prefix);
+      const title = items.length === 1 ? titleSingular : `${titlePlural} (${items.length} Titel)`;
+      const choices = await SUL.picker.show({
+        title,
+        groups,
+        allowFreeText: !!allowFreeText,
+        existingCodes: existing,
+        partialCodes: partial,
+        itemCount: items.length,
+      });
+      if (!choices) return;
+      const tags = choices.map(e => `${prefix}${e.code}`);
+      await Zotero.DB.executeTransaction(async () => {
+        for (const item of items) {
+          for (const tag of tags) item.addTag(tag, 0);
+          await item.save();
+        }
+      });
+    },
+  },
+
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+  // DDC PICKER
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+
+  ddcPicker: {
+    ...ddcData,
+    pickAndApply() {
+      return SUL.picker.pickAndApply({
+        prefix: "DDC ",
+        titleSingular: "DDC-Tag wählen",
+        titlePlural: "DDC-Tag wählen",
+        groups: SUL.ddcPicker.groups,
+      });
+    },
+  },
+
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+  // BC PICKER
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+
+  bcPicker: {
+    ...bcData,
+    pickAndApply() {
+      return SUL.picker.pickAndApply({
+        prefix: "BC ",
+        titleSingular: "Bestellcode wählen",
+        titlePlural: "Bestellcode wählen",
+        groups: SUL.bcPicker.groups,
+        allowFreeText: SUL.bcPicker.allowFreeText,
+      });
+    },
+  },
+
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
   // LOCATION LOOKUP FUNCTIONS
   //////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////
@@ -216,7 +738,7 @@ SUL = {
 
     async processItem(item) {
       const isbns = SUL.locationLookup.getIsbns(item);
-      
+
       if (!isbns.length || !isbns.some(SUL.helpers.isValidIsbn)) {
         const itemStatus = {
           isInUBBe: false,
@@ -247,7 +769,7 @@ SUL = {
       SUL.locationLookup.ApplyTags(item, itemStatus);
       SUL.locationLookup.updateTargetField(item, SUL.targetField, holdingsFormatted);
     },
-    
+
     async processItemData(responseXML) {
       if (SUL.locationLookup.noResultsFound(responseXML)) {
         return SUL.locationLookup.createNoResultsResponse();
@@ -391,8 +913,8 @@ SUL = {
           holding.eholdingAvailability,
           holding.eholdingZonesString,
           holding.eholdingPackage
-        ].filter(part => part); // Filter out empty strings
-        formattedHoldings.push(parts.join(", ")); // Join non-empty parts with commas
+        ].filter(part => part);
+        formattedHoldings.push(parts.join(", "));
         if (holding.eholdingAvailability === "Online verfügbar") {
           if (!holding.eholdingPackage.includes("TEMP")) {
             itemStatus.isInUBBeOnline = true;
@@ -405,7 +927,7 @@ SUL = {
       const formattedResult = formattedHoldings.length > 0 ? formattedHoldings.join("\n") : "Keine elektronischen Bestände vorhanden";
       return { formattedResult, itemStatus };
     },
-    
+
 
     getElectronicHoldingsData(responseXML) {
       let holdings = [];
@@ -420,13 +942,13 @@ SUL = {
     },
 
     getElectronicHoldingData(holding) {
-      const eholdingAvailability = holding.querySelector("subfield[code='e']")?.textContent === "Available" 
+      const eholdingAvailability = holding.querySelector("subfield[code='e']")?.textContent === "Available"
         ? "Online verfügbar" : "Online nicht verfügbar";
       const eholdingZonesString = this.getAllowedAccessZonesString(
         Array.from(holding.querySelectorAll("subfield[code='b']"))?.map(zone => zone?.textContent) || []
       );
-      const eholdingPackage = holding.querySelector("subfield[code='m']") 
-        ? holding.querySelector("subfield[code='m']").textContent 
+      const eholdingPackage = holding.querySelector("subfield[code='m']")
+        ? holding.querySelector("subfield[code='m']").textContent
         : "ohne Paketinfos";
       return { eholdingAvailability, eholdingZonesString, eholdingPackage };
     },
@@ -446,7 +968,7 @@ SUL = {
       }
       return "andere Verfügbarkeiten"; // this should not happen
     },
-    
+
 
     updateTargetField(item, field, holdings) {
       const currentDate = new Date().toLocaleString();
