@@ -322,14 +322,7 @@ SUL = {
       });
     },
 
-    build(dialog, safeResolve) {
-      const io = dialog.arguments[0];
-      const doc = dialog.document;
-      const baseTitle = io.title || "";
-      if (baseTitle) doc.title = baseTitle;
-
-      const allGroups = Array.isArray(io.groups) ? io.groups : [];
-      const allEntries = allGroups.flatMap(g => g.entries || []);
+    buildDOM(doc, io) {
       const allowFreeText = !!io.allowFreeText;
 
       const style = doc.createElement("style");
@@ -392,6 +385,26 @@ SUL = {
       hint.appendChild(keys);
       footer.appendChild(hint);
       doc.body.appendChild(footer);
+
+      return {
+        filter,
+        results,
+        footer: { existingRow, existingTags, partialRow, partialTags, footerTags },
+      };
+    },
+
+    build(dialog, safeResolve) {
+      const io = dialog.arguments[0];
+      const doc = dialog.document;
+      const baseTitle = io.title || "";
+      if (baseTitle) doc.title = baseTitle;
+
+      const allGroups = Array.isArray(io.groups) ? io.groups : [];
+      const allEntries = allGroups.flatMap(g => g.entries || []);
+      const allowFreeText = !!io.allowFreeText;
+
+      const { filter, results, footer } = SUL.picker.buildDOM(doc, io);
+      const { existingRow, existingTags, partialRow, partialTags, footerTags } = footer;
 
       const existingCodes = io.existingCodes instanceof Set ? io.existingCodes : new Set(io.existingCodes || []);
       const partialCodes = io.partialCodes instanceof Set ? io.partialCodes : new Set(io.partialCodes || []);
@@ -456,18 +469,18 @@ SUL = {
           ...allEntries.filter(e => selected.has(e.code)).map(e => e.code),
           ...freeTextSelected,
         ];
-        renderChipRow(null, doc.getElementById("sul-footer-tags"), selectedChips, null, "—");
+        renderChipRow(null, footerTags, selectedChips, null, "—");
 
         renderChipRow(
-          doc.getElementById("sul-footer-existing"),
-          doc.getElementById("sul-footer-existing-tags"),
+          existingRow,
+          existingTags,
           allEntries.filter(e => existingCodes.has(e.code)).map(e => e.code),
           "sul-footer-existing-tag",
         );
 
         renderChipRow(
-          doc.getElementById("sul-footer-partial"),
-          doc.getElementById("sul-footer-partial-tags"),
+          partialRow,
+          partialTags,
           allEntries.filter(e => partialCodes.has(e.code)).map(e => e.code),
           "sul-footer-partial-tag",
         );
