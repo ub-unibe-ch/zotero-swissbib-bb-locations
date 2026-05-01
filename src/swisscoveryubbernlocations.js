@@ -408,13 +408,12 @@ SUL = {
 
       const existingCodes = io.existingCodes instanceof Set ? io.existingCodes : new Set(io.existingCodes || []);
       const partialCodes = io.partialCodes instanceof Set ? io.partialCodes : new Set(io.partialCodes || []);
-      const selected = new Set();
-      const freeTextSelected = new Set();
+      const picked = new Map(); // key: code-or-text, value: {freeText?: boolean}
       let visible = [];
       let activeIdx = 0;
 
       function updateTitle() {
-        const n = selected.size + freeTextSelected.size;
+        const n = picked.size;
         doc.title = n > 0 ? `${baseTitle} (${n} ausgewählt)` : baseTitle;
       }
 
@@ -422,7 +421,7 @@ SUL = {
         if (entry.freeTextCandidate) {
           const text = filter.value.trim();
           if (text) {
-            freeTextSelected.add(text);
+            picked.set(text, { freeText: true });
             filter.value = "";
             activeIdx = 0;
             updateTitle();
@@ -433,10 +432,10 @@ SUL = {
           return;
         }
         if (existingCodes.has(entry.code)) return;
-        if (selected.has(entry.code)) {
-          selected.delete(entry.code);
+        if (picked.has(entry.code)) {
+          picked.delete(entry.code);
         } else {
-          selected.add(entry.code);
+          picked.set(entry.code, {});
         }
         updateTitle();
         updateFooter();
@@ -465,10 +464,7 @@ SUL = {
       }
 
       function updateFooter() {
-        const selectedChips = [
-          ...allEntries.filter(e => selected.has(e.code)).map(e => e.code),
-          ...freeTextSelected,
-        ];
+        const selectedChips = [...picked.keys()];
         renderChipRow(null, footerTags, selectedChips, null, "—");
 
         renderChipRow(
@@ -544,7 +540,7 @@ SUL = {
             const isPartial = partialCodes.has(entry.code);
             const mark = doc.createElement("span");
             mark.className = "sul-mark";
-            if (selected.has(entry.code)) {
+            if (picked.has(entry.code)) {
               mark.classList.add("selected");
               mark.textContent = "✓";
             } else if (isExisting) {
@@ -615,11 +611,10 @@ SUL = {
           setActive(activeIdx - 1);
         } else if (e.key === "Enter" && e.ctrlKey) {
           e.preventDefault();
-          if (selected.size === 0 && freeTextSelected.size === 0) return;
-          const result = [
-            ...allEntries.filter(e => selected.has(e.code)),
-            ...[...freeTextSelected].map(t => ({ code: t, freeText: true })),
-          ];
+          if (picked.size === 0) return;
+          const result = [...picked].map(([code, meta]) =>
+            meta.freeText ? { code, freeText: true } : { code }
+          );
           safeResolve(result);
           try { dialog.close(); } catch (err) {}
         } else if (e.key === "Enter" && e.shiftKey) {
