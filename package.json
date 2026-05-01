@@ -43,7 +43,10 @@
         ],
         "setupFiles": [
             "./tests/jest.setup.js"
-        ]
+        ],
+        "moduleNameMapper": {
+            "\\.css$": "<rootDir>/tests/css-stub.js"
+        }
     },
     "dependencies": {
         "jsdom": "^24.1.0"

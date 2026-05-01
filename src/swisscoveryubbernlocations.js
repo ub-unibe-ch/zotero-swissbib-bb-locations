@@ -1,3 +1,11 @@
+const ddcData = require("./data/ddc-codes.js");
+const bcData = require("./data/bc-codes.js");
+const pickerCSS = require("./picker.css");
+
+function debug(msg) {
+  try { Zotero.debug(msg); } catch (e) {}
+}
+
 // Preference utility wrapper
 const PREFS_PREFIX = "extensions.swisscoveryubbernlocations.";
 const DEFAULTS = globalThis.__PREF_DEFAULTS__ || {};
@@ -275,10 +283,9 @@ SUL = {
         const safeResolve = (val) => {
           if (resolved) return;
           resolved = true;
-          try { Zotero.debug(`[SUL picker] resolve: ${JSON.stringify(val)}`); } catch (e) {}
+          debug(`[SUL picker] resolve: ${JSON.stringify(val)}`);
           resolve(val);
         };
-        SUL.picker._currentResolve = safeResolve;
         const win = Zotero.getMainWindow();
         const normalizedGroups = groups || (entries ? [{ label: null, entries }] : []);
         const io = {
@@ -299,12 +306,12 @@ SUL = {
         dialog.addEventListener(
           "DOMContentLoaded",
           () => {
-            try { Zotero.debug(`[SUL picker] DOMContentLoaded`); } catch (e) {}
-            SUL.picker.build(dialog);
+            debug(`[SUL picker] DOMContentLoaded`);
+            SUL.picker.build(dialog, safeResolve);
             dialog.addEventListener(
               "unload",
               () => {
-                try { Zotero.debug(`[SUL picker] unload (safety net)`); } catch (e) {}
+                debug(`[SUL picker] unload (safety net)`);
                 safeResolve(null);
               },
               { once: true },
@@ -315,9 +322,7 @@ SUL = {
       });
     },
 
-    _currentResolve: null,
-
-    build(dialog) {
+    build(dialog, safeResolve) {
       const io = dialog.arguments[0];
       const doc = dialog.document;
       const baseTitle = io.title || "";
@@ -328,43 +333,7 @@ SUL = {
       const allowFreeText = !!io.allowFreeText;
 
       const style = doc.createElement("style");
-      style.textContent = `
-        body { margin: 0; padding: 12px; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
-        #sul-filter { width: 100%; padding: 6px 8px; box-sizing: border-box; font-size: 13px; flex-shrink: 0; }
-        #sul-results { list-style: none; margin: 8px 0 0 0; padding: 0; flex: 1 1 0; overflow-y: auto; border: 1px solid #ccc; }
-        #sul-results li { padding: 5px 10px; cursor: pointer; display: flex; gap: 6px; align-items: flex-start; }
-        #sul-results li.active { background: #2a7ad4; color: #fff; }
-        #sul-results li:hover:not(.active):not(.group-header) { background: #e6effc; }
-        #sul-results li.empty { color: #888; font-style: italic; cursor: default; }
-        #sul-results li.empty:hover { background: transparent; }
-        #sul-results li.existing { color: #888; cursor: default; }
-        #sul-results li.existing:hover { background: transparent; }
-        #sul-results li.existing.active { background: #2a7ad4; color: #fff; }
-        #sul-results li.partial { color: #666; }
-        #sul-results li.group-header { display: block; font-size: 11px; font-weight: 600; color: #666; background: #f0f0f0; cursor: default; padding: 3px 10px; text-transform: uppercase; letter-spacing: 0.5px; border-top: 1px solid #ddd; }
-        #sul-results li.group-header:first-child { border-top: none; }
-        #sul-results li.add-freetext { color: #2a7ad4; font-style: italic; }
-        #sul-results li.add-freetext.active { background: #2a7ad4; color: #fff; font-style: italic; }
-        .sul-mark { width: 18px; text-align: center; font-weight: 700; flex-shrink: 0; line-height: 1.4; }
-        .sul-mark.selected { color: #2a7ad4; }
-        .sul-mark.existing { color: #c77600; }
-        .sul-mark.partial { color: #c77600; opacity: 0.5; }
-        #sul-results li.active .sul-mark { color: #fff; }
-        .sul-entry-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-        .sul-code { font-weight: 600; line-height: 1.4; }
-        .sul-label { font-size: 11px; color: #777; line-height: 1.3; }
-        #sul-results li.active .sul-label { color: rgba(255,255,255,0.85); }
-        .sul-hint { font-size: 10px; color: #999; font-style: italic; }
-        #sul-results li.active .sul-hint { color: rgba(255,255,255,0.75); }
-        #sul-footer { margin-top: 8px; padding: 6px 10px; border-top: 1px solid #ccc; font-size: 12px; color: #555; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
-        .sul-footer-row { display: flex; gap: 6px; align-items: baseline; }
-        .sul-footer-label { font-weight: 600; flex-shrink: 0; }
-        #sul-footer-tags, #sul-footer-existing-tags { display: flex; flex-wrap: wrap; gap: 4px; }
-        #sul-footer-hint { font-size: 10px; color: #999; border-top: 1px solid #e0e0e0; padding-top: 4px; margin-top: 2px; }
-        .sul-footer-tag { background: #2a7ad4; color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 11px; }
-        .sul-footer-existing-tag { background: #c77600; }
-        .sul-footer-partial-tag { background: #c77600; opacity: 0.6; }
-      `;
+      style.textContent = pickerCSS;
       doc.head.appendChild(style);
 
       const filter = doc.createElement("input");
@@ -410,7 +379,6 @@ SUL = {
       footerLabel.textContent = "Auswahl:";
       const footerTags = doc.createElement("span");
       footerTags.id = "sul-footer-tags";
-      footerTags.textContent = "—";
       selectedRow.appendChild(footerLabel);
       selectedRow.appendChild(footerTags);
       footer.appendChild(selectedRow);
@@ -467,53 +435,42 @@ SUL = {
         filter.focus();
       }
 
+      function renderChipRow(rowEl, containerEl, chips, extraClass, fallback) {
+        containerEl.replaceChildren();
+        if (chips.length === 0) {
+          if (rowEl) rowEl.style.display = "none";
+          if (fallback != null) containerEl.textContent = fallback;
+          return;
+        }
+        if (rowEl) rowEl.style.display = "";
+        for (const text of chips) {
+          const chip = doc.createElement("span");
+          chip.className = extraClass ? `sul-footer-tag ${extraClass}` : "sul-footer-tag";
+          chip.textContent = text;
+          containerEl.appendChild(chip);
+        }
+      }
+
       function updateFooter() {
-        const container = doc.getElementById("sul-footer-tags");
-        container.replaceChildren();
-        if (selected.size === 0 && freeTextSelected.size === 0) {
-          container.textContent = "—";
-        } else {
-          allEntries.filter(e => selected.has(e.code)).forEach(e => {
-            const chip = doc.createElement("span");
-            chip.className = "sul-footer-tag";
-            chip.textContent = e.code;
-            container.appendChild(chip);
-          });
-          freeTextSelected.forEach(text => {
-            const chip = doc.createElement("span");
-            chip.className = "sul-footer-tag";
-            chip.textContent = text;
-            container.appendChild(chip);
-          });
-        }
-        const existingRowEl = doc.getElementById("sul-footer-existing");
-        const existingContainer = doc.getElementById("sul-footer-existing-tags");
-        existingContainer.replaceChildren();
-        if (existingCodes.size > 0) {
-          existingRowEl.style.display = "";
-          allEntries.filter(e => existingCodes.has(e.code)).forEach(e => {
-            const chip = doc.createElement("span");
-            chip.className = "sul-footer-tag sul-footer-existing-tag";
-            chip.textContent = e.code;
-            existingContainer.appendChild(chip);
-          });
-        } else {
-          existingRowEl.style.display = "none";
-        }
-        const partialRowEl = doc.getElementById("sul-footer-partial");
-        const partialContainer = doc.getElementById("sul-footer-partial-tags");
-        partialContainer.replaceChildren();
-        if (partialCodes.size > 0) {
-          partialRowEl.style.display = "";
-          allEntries.filter(e => partialCodes.has(e.code)).forEach(e => {
-            const chip = doc.createElement("span");
-            chip.className = "sul-footer-tag sul-footer-partial-tag";
-            chip.textContent = e.code;
-            partialContainer.appendChild(chip);
-          });
-        } else {
-          partialRowEl.style.display = "none";
-        }
+        const selectedChips = [
+          ...allEntries.filter(e => selected.has(e.code)).map(e => e.code),
+          ...freeTextSelected,
+        ];
+        renderChipRow(null, doc.getElementById("sul-footer-tags"), selectedChips, null, "—");
+
+        renderChipRow(
+          doc.getElementById("sul-footer-existing"),
+          doc.getElementById("sul-footer-existing-tags"),
+          allEntries.filter(e => existingCodes.has(e.code)).map(e => e.code),
+          "sul-footer-existing-tag",
+        );
+
+        renderChipRow(
+          doc.getElementById("sul-footer-partial"),
+          doc.getElementById("sul-footer-partial-tags"),
+          allEntries.filter(e => partialCodes.has(e.code)).map(e => e.code),
+          "sul-footer-partial-tag",
+        );
       }
 
       function render() {
@@ -612,7 +569,7 @@ SUL = {
             if (isPartial && !isExisting) li.classList.add("partial");
             li.addEventListener("click", () => {
               if (isExisting) return;
-              try { Zotero.debug(`[SUL picker] click: ${entry.code}`); } catch (e) {}
+              debug(`[SUL picker] click: ${entry.code}`);
               toggleEntry(entry, false);
             });
             li.addEventListener("mousemove", () => setActive(entryIdx));
@@ -636,7 +593,7 @@ SUL = {
         render();
       });
       filter.addEventListener("keydown", (e) => {
-        try { Zotero.debug(`[SUL picker] keydown: ${e.key} ctrl=${e.ctrlKey}`); } catch (e2) {}
+        debug(`[SUL picker] keydown: ${e.key} ctrl=${e.ctrlKey}`);
         if (e.key === "ArrowDown") {
           e.preventDefault();
           setActive(activeIdx + 1);
@@ -650,9 +607,7 @@ SUL = {
             ...allEntries.filter(e => selected.has(e.code)),
             ...[...freeTextSelected].map(t => ({ code: t, freeText: true })),
           ];
-          if (typeof SUL.picker._currentResolve === "function") {
-            SUL.picker._currentResolve(result);
-          }
+          safeResolve(result);
           try { dialog.close(); } catch (err) {}
         } else if (e.key === "Enter" && e.shiftKey) {
           e.preventDefault();
@@ -664,9 +619,7 @@ SUL = {
           toggleEntry(visible[activeIdx], false);
         } else if (e.key === "Escape") {
           e.preventDefault();
-          if (typeof SUL.picker._currentResolve === "function") {
-            SUL.picker._currentResolve(null);
-          }
+          safeResolve(null);
           try { dialog.close(); } catch (err) {}
         }
       });
@@ -674,6 +627,48 @@ SUL = {
       render();
       updateFooter();
       filter.focus();
+    },
+
+    collectExistingCodes(items, prefix) {
+      const existing = new Set();
+      const partial = new Set();
+      const perItem = items.map(item =>
+        new Set(
+          item.getTags()
+            .filter(t => t.tag.startsWith(prefix))
+            .map(t => t.tag.substring(prefix.length))
+        )
+      );
+      const allCodes = new Set(perItem.flatMap(s => [...s]));
+      allCodes.forEach(code => {
+        const count = perItem.filter(s => s.has(code)).length;
+        if (count === items.length) existing.add(code);
+        else partial.add(code);
+      });
+      return { existing, partial };
+    },
+
+    async pickAndApply({ prefix, titleSingular, titlePlural, groups, allowFreeText }) {
+      const items = Zotero.getActiveZoteroPane().getSelectedItems();
+      if (!items.length) return;
+      const { existing, partial } = SUL.picker.collectExistingCodes(items, prefix);
+      const title = items.length === 1 ? titleSingular : `${titlePlural} (${items.length} Titel)`;
+      const choices = await SUL.picker.show({
+        title,
+        groups,
+        allowFreeText: !!allowFreeText,
+        existingCodes: existing,
+        partialCodes: partial,
+        itemCount: items.length,
+      });
+      if (!choices) return;
+      const tags = choices.map(e => `${prefix}${e.code}`);
+      await Zotero.DB.executeTransaction(async () => {
+        for (const item of items) {
+          for (const tag of tags) item.addTag(tag, 0);
+          await item.save();
+        }
+      });
     },
   },
 
@@ -684,218 +679,14 @@ SUL = {
   //////////////////////////////////////////////////////////////////
 
   ddcPicker: {
-    groups: [
-      {
-        label: "000 – Allgemeines",
-        entries: [
-          { code: "000", label: "Allgemeines, Wissenschaft" },
-          { code: "004", label: "Informatik" },
-          { code: "010", label: "Bibliografien" },
-          { code: "020", label: "Bibliotheks- und Informationswissenschaft" },
-          { code: "030", label: "Enzyklopädien" },
-          { code: "050", label: "Zeitschriften, fortlaufende Sammelwerke" },
-          { code: "060", label: "Organisationen, Museumswissenschaft" },
-          { code: "070", label: "Nachrichtenmedien, Journalismus, Verlagswesen" },
-          { code: "080", label: "Allgemeine Sammelwerke" },
-          { code: "090", label: "Handschriften, seltene Bücher" },
-        ],
-      },
-      {
-        label: "100 – Philosophie",
-        entries: [
-          { code: "100", label: "Philosophie" },
-          { code: "130", label: "Parapsychologie, Okkultismus" },
-          { code: "150", label: "Psychologie" },
-        ],
-      },
-      {
-        label: "200 – Religion",
-        entries: [
-          { code: "200", label: "Religion, Religionsphilosophie" },
-          { code: "220", label: "Bibel" },
-          { code: "230", label: "Theologie, Christentum" },
-          { code: "290", label: "Andere Religionen" },
-        ],
-      },
-      {
-        label: "300 – Sozialwissenschaften",
-        entries: [
-          { code: "300", label: "Sozialwissenschaften, Soziologie, Anthropologie" },
-          { code: "310", label: "Allgemeine Statistiken" },
-          { code: "320", label: "Politik" },
-          { code: "330", label: "Wirtschaft", hint: "Management → 650" },
-          { code: "333.7", label: "Natürliche Ressourcen, Energie und Umwelt" },
-          { code: "340", label: "Recht", hint: "Kriminologie, Strafvollzug → 360" },
-          { code: "350", label: "Öffentliche Verwaltung" },
-          { code: "355", label: "Militär" },
-          { code: "360", label: "Soziale Probleme, Sozialdienste, Versicherungen" },
-          { code: "370", label: "Erziehung, Schul- und Bildungswesen" },
-          { code: "380", label: "Handel, Kommunikation, Verkehr", hint: "Philatelie → 760" },
-          { code: "390", label: "Bräuche, Etikette, Folklore" },
-        ],
-      },
-      {
-        label: "400 – Sprache",
-        entries: [
-          { code: "400", label: "Sprache, Linguistik" },
-          { code: "420", label: "Englisch" },
-          { code: "430", label: "Deutsch" },
-          { code: "439", label: "Andere germanische Sprachen" },
-          { code: "440", label: "Französisch, romanische Sprachen allgemein" },
-          { code: "450", label: "Italienisch, Rumänisch, Rätoromanisch" },
-          { code: "460", label: "Spanisch, Portugiesisch" },
-          { code: "470", label: "Latein" },
-          { code: "480", label: "Griechisch" },
-          { code: "490", label: "Andere Sprachen" },
-          { code: "491.8", label: "Slawische Sprachen" },
-        ],
-      },
-      {
-        label: "500 – Naturwissenschaften",
-        entries: [
-          { code: "500", label: "Naturwissenschaften" },
-          { code: "510", label: "Mathematik" },
-          { code: "520", label: "Astronomie, Kartografie" },
-          { code: "530", label: "Physik" },
-          { code: "540", label: "Chemie", hint: "Biochemie → 570" },
-          { code: "550", label: "Geowissenschaften", hint: "Kartografie, Geodäsie → 520; Kristallografie, Mineralogie → 540" },
-          { code: "560", label: "Paläontologie" },
-          { code: "570", label: "Biowissenschaften, Biologie" },
-          { code: "580", label: "Pflanzen (Botanik)" },
-          { code: "590", label: "Tiere (Zoologie)" },
-        ],
-      },
-      {
-        label: "600 – Technik",
-        entries: [
-          { code: "600", label: "Technik" },
-          { code: "610", label: "Medizin, Gesundheit", hint: "Veterinärmedizin → 630" },
-          { code: "620", label: "Ingenieurwissenschaften und Maschinenbau" },
-          { code: "621.3", label: "Elektrotechnik, Elektronik" },
-          { code: "624", label: "Ingenieurbau und Umwelttechnik" },
-          { code: "630", label: "Landwirtschaft, Veterinärmedizin" },
-          { code: "640", label: "Hauswirtschaft und Familienleben" },
-          { code: "650", label: "Management" },
-          { code: "660", label: "Technische Chemie" },
-          { code: "670", label: "Industrielle und handwerkliche Fertigung" },
-          { code: "690", label: "Hausbau, Bauhandwerk" },
-        ],
-      },
-      {
-        label: "700 – Künste",
-        entries: [
-          { code: "700", label: "Künste, Bildende Kunst allgemein" },
-          { code: "710", label: "Landschaftsgestaltung, Raumplanung" },
-          { code: "720", label: "Architektur" },
-          { code: "730", label: "Plastik, Numismatik, Keramik, Metallkunst" },
-          { code: "740", label: "Grafik, angewandte Kunst" },
-          { code: "741.5", label: "Comics, Cartoons, Karikaturen" },
-          { code: "750", label: "Malerei" },
-          { code: "760", label: "Druckgrafik, Drucke" },
-          { code: "770", label: "Fotografie, Video, Computerkunst" },
-          { code: "780", label: "Musik" },
-          { code: "790", label: "Freizeitgestaltung, Darstellende Kunst" },
-          { code: "791", label: "Öffentliche Darbietungen, Film, Rundfunk" },
-          { code: "792", label: "Theater, Tanz" },
-          { code: "793", label: "Spiel" },
-          { code: "796", label: "Sport" },
-        ],
-      },
-      {
-        label: "800 – Literatur",
-        entries: [
-          { code: "800", label: "Literatur, Rhetorik, Literaturwissenschaft" },
-          { code: "810", label: "Englische Literatur Amerikas" },
-          { code: "820", label: "Englische Literatur" },
-          { code: "830", label: "Deutsche Literatur" },
-          { code: "839", label: "Literatur in anderen germanischen Sprachen" },
-          { code: "840", label: "Französische Literatur" },
-          { code: "850", label: "Italienische, rumänische, rätoromanische Literatur" },
-          { code: "860", label: "Spanische und portugiesische Literatur" },
-          { code: "870", label: "Lateinische Literatur" },
-          { code: "880", label: "Griechische Literatur" },
-          { code: "890", label: "Literatur in anderen Sprachen" },
-          { code: "891.8", label: "Slawische Literatur" },
-        ],
-      },
-      {
-        label: "900 – Geschichte",
-        entries: [
-          { code: "900", label: "Geschichte" },
-          { code: "910", label: "Geografie, Reisen" },
-          { code: "914.94", label: "Geografie, Reisen (Schweiz)" },
-          { code: "920", label: "Biografie, Genealogie, Heraldik" },
-          { code: "930", label: "Alte Geschichte, Archäologie" },
-          { code: "940", label: "Geschichte Europas" },
-          { code: "949.4", label: "Geschichte der Schweiz" },
-          { code: "950", label: "Geschichte Asiens" },
-          { code: "960", label: "Geschichte Afrikas" },
-          { code: "970", label: "Geschichte Nordamerikas" },
-          { code: "980", label: "Geschichte Südamerikas" },
-          { code: "990", label: "Geschichte der übrigen Welt" },
-        ],
-      },
-      {
-        label: "Sonstige",
-        entries: [
-          { code: "B", label: "Belletristik", hint: "nur zusätzlich zu 800-890" },
-          { code: "K", label: "Kinder- und Jugendliteratur" },
-          { code: "S", label: "Schulbücher" },
-        ],
-      },
-    ],
-
-    async pickAndApply() {
-      const ZoteroPane = Zotero.getActiveZoteroPane();
-      const items = ZoteroPane.getSelectedItems();
-      if (!items.length) {
-        SUL.log("ddcPicker: no items selected");
-        return;
-      }
-      const allHaveCodes = new Set();
-      const someHaveCodes = new Set();
-      if (items.length === 1) {
-        items[0].getTags().forEach((t) => {
-          if (t.tag.startsWith("DDC")) {
-            allHaveCodes.add(t.tag.replace("DDC ", ""));
-          }
-        });
-      } else {
-        const perItem = items.map((item) =>
-          new Set(item.getTags().filter((t) => t.tag.startsWith("DDC")).map((t) => t.tag.replace("DDC ", "")))
-        );
-        const allCodes = new Set(perItem.flatMap((s) => [...s]));
-        allCodes.forEach((code) => {
-          const count = perItem.filter((s) => s.has(code)).length;
-          if (count === items.length) {
-            allHaveCodes.add(code);
-          } else {
-            someHaveCodes.add(code);
-          }
-        });
-      }
-      const title = items.length === 1 ? "DDC-Tag wählen" : `DDC-Tag wählen (${items.length} Titel)`;
-      const choices = await SUL.picker.show({
-        title,
+    ...ddcData,
+    pickAndApply() {
+      return SUL.picker.pickAndApply({
+        prefix: "DDC ",
+        titleSingular: "DDC-Tag wählen",
+        titlePlural: "DDC-Tag wählen",
         groups: SUL.ddcPicker.groups,
-        existingCodes: allHaveCodes,
-        partialCodes: someHaveCodes,
-        itemCount: items.length,
       });
-      if (!choices) {
-        SUL.log("ddcPicker: cancelled");
-        return;
-      }
-      const tags = choices.map((e) => `DDC ${e.code}`);
-      await Zotero.DB.executeTransaction(async () => {
-        for (const item of items) {
-          for (const tag of tags) {
-            item.addTag(tag, 0);
-          }
-          await item.save();
-        }
-      });
-      SUL.log(`ddcPicker: added ${tags.join(", ")} to ${items.length} item(s)`);
     },
   },
 
@@ -906,96 +697,15 @@ SUL = {
   //////////////////////////////////////////////////////////////////
 
   bcPicker: {
-    groups: [
-      {
-        label: "Print / Verfügbarkeit",
-        entries: [
-          { code: "MEX",  label: "Auch wenn eBook oder Print in Kurierbibl. vorhanden" },
-          { code: "MEXo", label: "Auch wenn eBook vorhanden" },
-          { code: "MEXp", label: "Auch wenn Print in Kurierbibl. vorhanden" },
-          { code: "UBE",  label: "Nur wenn nirgends in UB Bern vorhanden" },
-          { code: "SLSP", label: "Nur wenn schweizweit in keiner SLSP-Bibl. ausleihbar" },
-        ],
-      },
-      {
-        label: "E-Book",
-        entries: [
-          { code: "E1",   label: "1-user" },
-          { code: "E1p",  label: "1-user, auch wenn Print vorhanden" },
-          { code: "E1s",  label: "1-user + NZ-Katalogisat" },
-          { code: "E1ps", label: "1-user, auch wenn Print + NZ-Katalogisat" },
-          { code: "E3",   label: "3-user" },
-          { code: "E3p",  label: "3-user, auch wenn Print vorhanden" },
-          { code: "E3s",  label: "3-user + NZ-Katalogisat" },
-          { code: "E3ps", label: "3-user, auch wenn Print + NZ-Katalogisat" },
-          { code: "E+",   label: "Unlimited" },
-          { code: "E+p",  label: "Unlimited, auch wenn Print vorhanden" },
-          { code: "E+s",  label: "Unlimited + NZ-Katalogisat" },
-          { code: "E+ps", label: "Unlimited, auch wenn Print + NZ-Katalogisat" },
-          { code: "OA",   label: "OA-Katalogisat erstellen (keine Erwerbung)" },
-        ],
-      },
-      {
-        label: "Bernensia",
-        entries: [
-          { code: "Ausleihe",                label: "1 Exemplar: Ausleihe (UB-Speicher)" },
-          { code: "Ausleihe+Archiv",         label: "2 Exemplare: Ausleihe + Archiv (BMü-Sonderlesesaal)" },
-          { code: "Ausleihe+Archiv+Ansicht", label: "3 Exemplare: Ausleihe + Archiv + Ansicht (Bernensia-Bibl.)" },
-          { code: "bb",                      label: "Berner Belletristik" },
-        ],
-      },
-    ],
-
-    async pickAndApply() {
-      const ZoteroPane = Zotero.getActiveZoteroPane();
-      const items = ZoteroPane.getSelectedItems();
-      if (!items.length) {
-        SUL.log("bcPicker: no items selected");
-        return;
-      }
-      const allHaveCodes = new Set();
-      const someHaveCodes = new Set();
-      if (items.length === 1) {
-        items[0].getTags().forEach(t => {
-          if (t.tag.startsWith("BC ")) allHaveCodes.add(t.tag.substring(3));
-        });
-      } else {
-        const perItem = items.map(item =>
-          new Set(item.getTags().filter(t => t.tag.startsWith("BC ")).map(t => t.tag.substring(3)))
-        );
-        const allCodes = new Set(perItem.flatMap(s => [...s]));
-        allCodes.forEach(code => {
-          const count = perItem.filter(s => s.has(code)).length;
-          if (count === items.length) {
-            allHaveCodes.add(code);
-          } else {
-            someHaveCodes.add(code);
-          }
-        });
-      }
-      const title = items.length === 1 ? "Bestellcode wählen" : `Bestellcode wählen (${items.length} Titel)`;
-      const choices = await SUL.picker.show({
-        title,
+    ...bcData,
+    pickAndApply() {
+      return SUL.picker.pickAndApply({
+        prefix: "BC ",
+        titleSingular: "Bestellcode wählen",
+        titlePlural: "Bestellcode wählen",
         groups: SUL.bcPicker.groups,
-        allowFreeText: true,
-        existingCodes: allHaveCodes,
-        partialCodes: someHaveCodes,
-        itemCount: items.length,
+        allowFreeText: SUL.bcPicker.allowFreeText,
       });
-      if (!choices) {
-        SUL.log("bcPicker: cancelled");
-        return;
-      }
-      const tags = choices.map(e => `BC ${e.code}`);
-      await Zotero.DB.executeTransaction(async () => {
-        for (const item of items) {
-          for (const tag of tags) {
-            item.addTag(tag, 0);
-          }
-          await item.save();
-        }
-      });
-      SUL.log(`bcPicker: added ${tags.join(", ")} to ${items.length} item(s)`);
     },
   },
 
