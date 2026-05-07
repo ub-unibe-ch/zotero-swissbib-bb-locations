@@ -3,6 +3,7 @@ const bcData = require("./data/bc-codes.js");
 const pickerCSS = require("./picker.css");
 
 function debug(msg) {
+  if (!Pref.debug) return;
   try { Zotero.debug(msg); } catch (e) {}
 }
 
@@ -88,6 +89,19 @@ SUL = {
     window.MozXULElement.insertFTLIfNeeded(this.ftlFilename);
   },
 
+  _l10n: null,
+  /**
+   * @param {string} key
+   * @param {Record<string, any>} [args]
+   */
+  formatL10n(key, args) {
+    if (!SUL._l10n) {
+      const win = Zotero.getMainWindow();
+      SUL._l10n = new win.Localization([SUL.ftlFilename], true);
+    }
+    return SUL._l10n.formatValueSync(`zoteroswisscoveryubbernlocations-${key}`, args);
+  },
+
   registerMenu() {
     this.menuID = Zotero.MenuManager.registerMenu({
       menuID: "swisscoveryubbernlocations-itemmenu",
@@ -160,7 +174,13 @@ SUL = {
   },
 
   registerShortcuts(win) {
+    if (SUL._shortcutHandlers.has(win)) return;
+    /** @param {KeyboardEvent} e */
     const handler = (e) => {
+      if (e.repeat) return;
+      const t = /** @type {any} */ (e.target);
+      const tag = t?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || t?.isContentEditable) return;
       const ddc = SUL.parseShortcut(SUL.shortcutDDC);
       const bc = SUL.parseShortcut(SUL.shortcutBC);
       if (ddc && SUL.matchShortcut(ddc, e)) {
@@ -288,13 +308,28 @@ SUL = {
         };
         const win = Zotero.getMainWindow();
         const normalizedGroups = groups || (entries ? [{ label: null, entries }] : []);
+        const fmt = SUL.formatL10n;
+        const items = itemCount || 1;
+        const strings = {
+          filterPlaceholder: fmt(allowFreeText ? "picker-filter-placeholder-freetext" : "picker-filter-placeholder"),
+          empty: fmt("picker-empty"),
+          footerExisting: fmt(items > 1 ? "picker-footer-existing-all" : "picker-footer-existing-single"),
+          footerExistingPartial: fmt("picker-footer-existing-partial"),
+          footerSelected: fmt("picker-footer-selected"),
+          footerEmptyPlaceholder: fmt("picker-footer-empty-placeholder"),
+          hintLegend: fmt("picker-hint-legend"),
+          hintKeys: fmt("picker-hint-keys"),
+          addFreetext: (/** @type {string} */ q) => fmt("picker-add-freetext", { query: q }),
+          titleCount: (/** @type {number} */ n) => fmt("picker-title-count", { count: n }),
+        };
         const io = {
           title,
           groups: normalizedGroups,
           allowFreeText: !!allowFreeText,
           existingCodes: existingCodes || new Set(),
           partialCodes: partialCodes || new Set(),
-          itemCount: itemCount || 1,
+          itemCount: items,
+          strings,
           result: null,
         };
         const dialog = win.openDialog(
@@ -323,7 +358,7 @@ SUL = {
     },
 
     buildDOM(doc, io) {
-      const allowFreeText = !!io.allowFreeText;
+      const s = io.strings;
 
       const style = doc.createElement("style");
       style.textContent = pickerCSS;
@@ -332,7 +367,7 @@ SUL = {
       const filter = doc.createElement("input");
       filter.id = "sul-filter";
       filter.type = "text";
-      filter.placeholder = allowFreeText ? "Filter / Freitext…" : "Filter…";
+      filter.placeholder = s.filterPlaceholder;
       doc.body.appendChild(filter);
 
       const results = doc.createElement("ul");
@@ -347,7 +382,7 @@ SUL = {
       existingRow.style.display = "none";
       const existingLabel = doc.createElement("span");
       existingLabel.className = "sul-footer-label";
-      existingLabel.textContent = io.itemCount > 1 ? "Vergeben (alle):" : "Vergeben:";
+      existingLabel.textContent = s.footerExisting;
       const existingTags = doc.createElement("span");
       existingTags.id = "sul-footer-existing-tags";
       existingRow.appendChild(existingLabel);
@@ -359,7 +394,7 @@ SUL = {
       partialRow.style.display = "none";
       const partialLabel = doc.createElement("span");
       partialLabel.className = "sul-footer-label";
-      partialLabel.textContent = "Vergeben (teilweise):";
+      partialLabel.textContent = s.footerExistingPartial;
       const partialTags = doc.createElement("span");
       partialTags.id = "sul-footer-partial-tags";
       partialRow.appendChild(partialLabel);
@@ -369,7 +404,7 @@ SUL = {
       selectedRow.className = "sul-footer-row";
       const footerLabel = doc.createElement("span");
       footerLabel.className = "sul-footer-label";
-      footerLabel.textContent = "Auswahl:";
+      footerLabel.textContent = s.footerSelected;
       const footerTags = doc.createElement("span");
       footerTags.id = "sul-footer-tags";
       selectedRow.appendChild(footerLabel);
@@ -378,9 +413,9 @@ SUL = {
       const hint = doc.createElement("div");
       hint.id = "sul-footer-hint";
       const legend = doc.createElement("div");
-      legend.textContent = "✓ ausgewählt · ● alle haben es · ◔ manche haben es";
+      legend.textContent = s.hintLegend;
       const keys = doc.createElement("div");
-      keys.textContent = "Enter: wählen · Shift+Enter: wählen + Filter löschen · Ctrl+Enter: übernehmen · Esc: abbrechen";
+      keys.textContent = s.hintKeys;
       hint.appendChild(legend);
       hint.appendChild(keys);
       footer.appendChild(hint);
@@ -405,6 +440,7 @@ SUL = {
 
       const { filter, results, footer } = SUL.picker.buildDOM(doc, io);
       const { existingRow, existingTags, partialRow, partialTags, footerTags } = footer;
+      const s = io.strings;
 
       const existingCodes = io.existingCodes instanceof Set ? io.existingCodes : new Set(io.existingCodes || []);
       const partialCodes = io.partialCodes instanceof Set ? io.partialCodes : new Set(io.partialCodes || []);
@@ -414,7 +450,7 @@ SUL = {
 
       function updateTitle() {
         const n = picked.size;
-        doc.title = n > 0 ? `${baseTitle} (${n} ausgewählt)` : baseTitle;
+        doc.title = n > 0 ? `${baseTitle} ${s.titleCount(n)}` : baseTitle;
       }
 
       function toggleEntry(entry, resetFilter) {
@@ -465,7 +501,7 @@ SUL = {
 
       function updateFooter() {
         const selectedChips = [...picked.keys()];
-        renderChipRow(null, footerTags, selectedChips, null, "—");
+        renderChipRow(null, footerTags, selectedChips, null, s.footerEmptyPlaceholder);
 
         renderChipRow(
           existingRow,
@@ -504,19 +540,19 @@ SUL = {
 
         if (filteredGroups.length === 0) {
           if (allowFreeText && q) {
-            const entry = { code: q, label: `"${q}" hinzufügen`, freeTextCandidate: true };
+            const entry = { code: q, freeTextCandidate: true };
             visible = [entry];
             activeIdx = 0;
             const li = doc.createElement("li");
             li.className = "add-freetext active";
             li.dataset.entryIndex = "0";
-            li.textContent = `+ "${q}" hinzufügen`;
+            li.textContent = s.addFreetext(q);
             li.addEventListener("click", () => toggleEntry(entry, false));
             results.appendChild(li);
           } else {
             const li = doc.createElement("li");
             li.className = "empty";
-            li.textContent = "Keine Treffer";
+            li.textContent = s.empty;
             results.appendChild(li);
           }
           return;
@@ -661,7 +697,9 @@ SUL = {
       const items = Zotero.getActiveZoteroPane().getSelectedItems();
       if (!items.length) return;
       const { existing, partial } = SUL.picker.collectExistingCodes(items, prefix);
-      const title = items.length === 1 ? titleSingular : `${titlePlural} (${items.length} Titel)`;
+      const title = items.length === 1
+        ? titleSingular
+        : `${titlePlural} ${SUL.formatL10n("picker-title-items", { count: items.length })}`;
       const choices = await SUL.picker.show({
         title,
         groups,
@@ -690,10 +728,11 @@ SUL = {
   ddcPicker: {
     ...ddcData,
     pickAndApply() {
+      const title = SUL.formatL10n("picker-title-ddc");
       return SUL.picker.pickAndApply({
         prefix: "DDC ",
-        titleSingular: "DDC-Tag wählen",
-        titlePlural: "DDC-Tag wählen",
+        titleSingular: title,
+        titlePlural: title,
         groups: SUL.ddcPicker.groups,
       });
     },
@@ -708,10 +747,11 @@ SUL = {
   bcPicker: {
     ...bcData,
     pickAndApply() {
+      const title = SUL.formatL10n("picker-title-bc");
       return SUL.picker.pickAndApply({
         prefix: "BC ",
-        titleSingular: "Bestellcode wählen",
-        titlePlural: "Bestellcode wählen",
+        titleSingular: title,
+        titlePlural: title,
         groups: SUL.bcPicker.groups,
         allowFreeText: SUL.bcPicker.allowFreeText,
       });

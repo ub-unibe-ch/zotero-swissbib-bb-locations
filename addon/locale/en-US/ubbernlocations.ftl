@@ -38,3 +38,19 @@ preferences-shortcutDDC =
 
 preferences-shortcutBC =
     .value = BC Picker
+
+picker-filter-placeholder = Filter…
+picker-filter-placeholder-freetext = Filter / free text…
+picker-empty = No matches
+picker-add-freetext = + Add "{ $query }"
+picker-footer-existing-all = Already tagged (all):
+picker-footer-existing-single = Already tagged:
+picker-footer-existing-partial = Already tagged (some):
+picker-footer-selected = Selection:
+picker-footer-empty-placeholder = —
+picker-hint-legend = ✓ selected · ● all have it · ◔ some have it
+picker-hint-keys = Enter: pick · Shift+Enter: pick + clear filter · Ctrl+Enter: apply · Esc: cancel
+picker-title-count = ({ $count } selected)
+picker-title-items = ({ $count } items)
+picker-title-ddc = Choose DDC tag
+picker-title-bc = Choose order code

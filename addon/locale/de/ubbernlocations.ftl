@@ -38,3 +38,19 @@ preferences-shortcutDDC =
 
 preferences-shortcutBC =
     .value = BC-Auswahl
+
+picker-filter-placeholder = Filter…
+picker-filter-placeholder-freetext = Filter / Freitext…
+picker-empty = Keine Treffer
+picker-add-freetext = + "{ $query }" hinzufügen
+picker-footer-existing-all = Vergeben (alle):
+picker-footer-existing-single = Vergeben:
+picker-footer-existing-partial = Vergeben (teilweise):
+picker-footer-selected = Auswahl:
+picker-footer-empty-placeholder = —
+picker-hint-legend = ✓ ausgewählt · ● alle haben es · ◔ manche haben es
+picker-hint-keys = Enter: wählen · Shift+Enter: wählen + Filter löschen · Ctrl+Enter: übernehmen · Esc: abbrechen
+picker-title-count = ({ $count } ausgewählt)
+picker-title-items = ({ $count } Titel)
+picker-title-ddc = DDC-Tag wählen
+picker-title-bc = Bestellcode wählen
