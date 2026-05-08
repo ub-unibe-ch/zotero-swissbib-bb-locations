@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0",
+    "version": "0.5.0",
     "description": "Zotero/Jurism-Plugin zur Bestandsabfrage im Swisscovery UB Bern",
 
     "config": {
@@ -24,6 +24,7 @@
     
     "scripts": {
         "start": "zotero-plugin serve",
+        "startbeta": "node scripts/start-beta.mjs",
         "build": "zotero-plugin build",
         "release": "zotero-plugin release",
         "bump": "bumpp --commit \"chore(publish): release v%s\" --no-tag",
@@ -42,7 +43,10 @@
         ],
         "setupFiles": [
             "./tests/jest.setup.js"
-        ]
+        ],
+        "moduleNameMapper": {
+            "\\.css$": "<rootDir>/tests/css-stub.js"
+        }
     },
     "dependencies": {
         "jsdom": "^24.1.0"

@@ -106,6 +106,7 @@ export default defineConfig({
         },
         bundle: true,
         target: "firefox115",
+        loader: { ".css": "text" },
         outfile: `.scaffold/build/addon/swisscoveryubbernlocations.js`,
       },
     ],
