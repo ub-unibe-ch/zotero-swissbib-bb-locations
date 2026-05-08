@@ -31,7 +31,7 @@ preferences-debug =
 preferences-shortcuts =
     .label = Tastenkombinationen
 
-preferences-shortcutHint = Format: Modifier mit Komma getrennt, z.B. accel,alt,K. Verfügbar: accel (= Ctrl auf Win/Linux, ⌘ auf Mac), control (alias ctrl), meta (alias cmd), alt, shift. accel nicht mit control/meta kombinieren. Leer lassen, um den Shortcut zu deaktivieren.
+preferences-shortcutHint = Format: Modifier mit Komma getrennt, z.B. accel,alt,K. Verfügbar: accel (Ctrl auf Win/Linux, Cmd auf Mac), control (alias ctrl), meta (alias cmd; Cmd auf Mac, Win-Taste auf Win/Linux), alt, shift. accel nicht mit control/meta kombinieren. Leer lassen, um den Shortcut zu deaktivieren.
 
 preferences-shortcutDDC =
     .value = DDC-Auswahl

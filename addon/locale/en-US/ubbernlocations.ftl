@@ -31,7 +31,7 @@ preferences-debug =
 preferences-shortcuts =
     .label = Keyboard Shortcuts
 
-preferences-shortcutHint = Format: comma-separated modifiers, e.g. accel,alt,K. Available: accel (= Ctrl on Win/Linux, ⌘ on Mac), control (alias ctrl), meta (alias cmd), alt, shift. Don't combine accel with control/meta. Leave empty to disable the shortcut.
+preferences-shortcutHint = Format: comma-separated modifiers, e.g. accel,alt,K. Available: accel (Ctrl on Win/Linux, Cmd on Mac), control (alias ctrl), meta (alias cmd; Cmd on Mac, Win key on Win/Linux), alt, shift. Don't combine accel with control/meta. Leave empty to disable the shortcut.
 
 preferences-shortcutDDC =
     .value = DDC Picker
