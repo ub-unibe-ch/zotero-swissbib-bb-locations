@@ -155,21 +155,30 @@ SUL = {
   parseShortcut(prefValue) {
     if (!prefValue) return null;
     const parts = prefValue.split(",").map(s => s.trim().toLowerCase());
-    const result = { accel: false, alt: false, shift: false, key: "" };
+    const result = { accel: false, ctrl: false, meta: false, alt: false, shift: false, key: "" };
     for (const part of parts) {
       if (part === "accel") result.accel = true;
+      else if (part === "control" || part === "ctrl") result.ctrl = true;
+      else if (part === "meta" || part === "cmd") result.meta = true;
       else if (part === "alt") result.alt = true;
       else if (part === "shift") result.shift = true;
       else result.key = part.toUpperCase();
     }
-    return result.key ? result : null;
+    if (!result.key) return null;
+    // accel + control/meta would resolve differently per platform (e.g. on Win
+    // accel→ctrl, so accel+ctrl collapses to plain Ctrl while on Mac it means
+    // Cmd+Ctrl). Reject the mix so a pref string means the same on all platforms.
+    if (result.accel && (result.ctrl || result.meta)) return null;
+    return result;
   },
 
   matchShortcut(parsed, e) {
-    const accel = Zotero.isMac ? e.metaKey : e.ctrlKey;
-    return parsed.accel === accel
-      && parsed.alt === e.altKey
-      && parsed.shift === e.shiftKey
+    const requiredCtrl = parsed.ctrl || (parsed.accel && !Zotero.isMac);
+    const requiredMeta = parsed.meta || (parsed.accel && Zotero.isMac);
+    return e.ctrlKey === requiredCtrl
+      && e.metaKey === requiredMeta
+      && e.altKey === parsed.alt
+      && e.shiftKey === parsed.shift
       && parsed.key === e.key.toUpperCase();
   },
 
@@ -519,7 +528,8 @@ SUL = {
       }
 
       function render() {
-        const q = filter.value.trim().toLowerCase();
+        const rawQuery = filter.value.trim();
+        const q = rawQuery.toLowerCase();
         visible = [];
         results.replaceChildren();
 
@@ -539,14 +549,14 @@ SUL = {
         })).filter(g => g.entries.length > 0);
 
         if (filteredGroups.length === 0) {
-          if (allowFreeText && q) {
-            const entry = { code: q, freeTextCandidate: true };
+          if (allowFreeText && rawQuery) {
+            const entry = { code: rawQuery, freeTextCandidate: true };
             visible = [entry];
             activeIdx = 0;
             const li = doc.createElement("li");
             li.className = "add-freetext active";
             li.dataset.entryIndex = "0";
-            li.textContent = s.addFreetext(q);
+            li.textContent = s.addFreetext(rawQuery);
             li.addEventListener("click", () => toggleEntry(entry, false));
             results.appendChild(li);
           } else {
@@ -639,14 +649,14 @@ SUL = {
         render();
       });
       filter.addEventListener("keydown", (e) => {
-        debug(`[SUL picker] keydown: ${e.key} ctrl=${e.ctrlKey}`);
+        const accel = Zotero.isMac ? e.metaKey : e.ctrlKey;
         if (e.key === "ArrowDown") {
           e.preventDefault();
           setActive(activeIdx + 1);
         } else if (e.key === "ArrowUp") {
           e.preventDefault();
           setActive(activeIdx - 1);
-        } else if (e.key === "Enter" && e.ctrlKey) {
+        } else if (e.key === "Enter" && accel) {
           e.preventDefault();
           if (picked.size === 0) return;
           const result = [...picked].map(([code, meta]) =>

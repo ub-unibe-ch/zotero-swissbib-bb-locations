@@ -31,7 +31,7 @@ preferences-debug =
 preferences-shortcuts =
     .label = Tastenkombinationen
 
-preferences-shortcutHint = Format: Modifier mit Komma getrennt, z.B. accel,alt,K. Verfügbar: accel (Ctrl/⌘), alt, shift. Leer lassen, um den Shortcut zu deaktivieren.
+preferences-shortcutHint = Format: Modifier mit Komma getrennt, z.B. accel,alt,K. Verfügbar: accel (= Ctrl auf Win/Linux, ⌘ auf Mac), control (alias ctrl), meta (alias cmd), alt, shift. accel nicht mit control/meta kombinieren. Leer lassen, um den Shortcut zu deaktivieren.
 
 preferences-shortcutDDC =
     .value = DDC-Auswahl
@@ -49,7 +49,7 @@ picker-footer-existing-partial = Vergeben (teilw.):
 picker-footer-selected = Auswahl:
 picker-footer-empty-placeholder = —
 picker-hint-legend = ✓ ausgewählt · ● alle haben es · ◔ manche haben es
-picker-hint-keys = Enter: wählen · Shift+Enter: wählen + Filter löschen · Ctrl+Enter: übernehmen · Esc: abbrechen
+picker-hint-keys = Enter: wählen · Shift+Enter: wählen + Filter löschen · Cmd/Ctrl+Enter: übernehmen · Esc: abbrechen
 picker-title-count = ({ $count } ausgewählt)
 picker-title-items = ({ $count } Titel)
 picker-title-ddc = DDC-Tag wählen
