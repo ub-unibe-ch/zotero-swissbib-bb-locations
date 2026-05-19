@@ -30,6 +30,12 @@ module.exports = {
       ],
     },
     {
+      label: "Format",
+      entries: [
+        { code: "PB", label: "Paperback" },
+      ],
+    },
+    {
       label: "Bernensia",
       entries: [
         { code: "Ausleihe",                label: "1 Exemplar: Ausleihe (UB-Speicher)" },
