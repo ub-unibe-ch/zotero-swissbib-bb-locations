@@ -1,5 +1,10 @@
 # Änderungen
 
+## v0.5.1
+- **Feature**: Neuer Bestellcode `PB` (Paperback) in neuer Picker-Gruppe „Format"
+- Standortcheck-Tags mit `__`-Präfix, damit sie im Tag-Selektor ganz oben einsortiert werden; alte unprefixte Tags werden beim nächsten „Standorte abfragen"-Lauf automatisch ersetzt
+- README dokumentiert jetzt die DDC-/BC-Picker (Gruppen, Footer-Chips, Tastenkürzel, Shortcuts, Freitext)
+
 ## v0.5.0
 - **Feature**: DDC-Tag-Picker mit DNB-CH-Klassifikation — searchable Dialog mit Multi-Select über alle markierten Items
 - **Feature**: BC-Tag-Picker (Bestellcodes) mit Freitext-Fallback für seltene Codes
