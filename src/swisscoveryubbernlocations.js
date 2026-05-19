@@ -72,13 +72,22 @@ SUL = {
   },
 
   tags: {
-    withoutISBN: "UB Bern Standortcheck: ohne (gültige) ISBN",
-    notInUBBE: "UB Bern Standortcheck: nein",
-    inUBBe: "UB Bern Standortcheck: ja",
-    inUBBeKurierbib: "UB Bern Standortcheck: Kurierbibliothek",
-    inUBBeOnline: "UB Bern Standortcheck: Online",
-    inUBBeOnlineViaEBA: "UB Bern Standortcheck: Online via EBA",
+    withoutISBN: "__UB Bern Standortcheck: ohne (gültige) ISBN",
+    notInUBBE: "__UB Bern Standortcheck: nein",
+    inUBBe: "__UB Bern Standortcheck: ja",
+    inUBBeKurierbib: "__UB Bern Standortcheck: Kurierbibliothek",
+    inUBBeOnline: "__UB Bern Standortcheck: Online",
+    inUBBeOnlineViaEBA: "__UB Bern Standortcheck: Online via EBA",
   },
+
+  legacyTags: [
+    "UB Bern Standortcheck: ohne (gültige) ISBN",
+    "UB Bern Standortcheck: nein",
+    "UB Bern Standortcheck: ja",
+    "UB Bern Standortcheck: Kurierbibliothek",
+    "UB Bern Standortcheck: Online",
+    "UB Bern Standortcheck: Online via EBA",
+  ],
 
   log(msg) {
     Zotero.debug("[ Swisscovery UB Bern Locations ] : " + msg);
@@ -868,7 +877,7 @@ SUL = {
         { condition: isInUBBeOnline, tag: SUL.tags.inUBBeOnline },
         { condition: isInUBBeOnlineViaEBA, tag: SUL.tags.inUBBeOnlineViaEBA },
       ];
-      for (const tag of Object.values(SUL.tags)) {
+      for (const tag of [...Object.values(SUL.tags), ...SUL.legacyTags]) {
         if (item.hasTag(tag)) {
           item.removeTag(tag);
         }

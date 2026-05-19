@@ -18,14 +18,18 @@
 
 ## Benutzung
 
-- **Kontextmenü-Funktionen:** 
+- **Kontextmenü-Funktionen:**
   - Rechtsklick auf einen oder mehrere Titel -> "Swisscovery UB Bern Standortabfrage". Es stehen folgende Funktionen zur Verfügung:
     - Standorte abfragen
     - Bestellnotiz eintragen
+    - DDC-Tag hinzufügen…
+    - Bestellcode wählen…
 
 ### Standorte eintragen
 
 Die Funktion "Standorte eintragen" fragt die Standorte der markierten Titel an der UB Bern ab und schreibt die Ergebnisse ins Zielfeld (Standard: Zusammenfassung, konfigurierbar in den Einstellungen). Zusätzlich werden Tags basierend auf den Ergebnissen gesetzt, um eine schnelle Filterung zu ermöglichen.
+
+Die gesetzten Tags beginnen alle mit dem Präfix `__UB Bern Standortcheck: …`, so dass sie in Zoteros Tag-Selektor ganz oben einsortiert werden.
 
 ### Bestellnotiz eintragen
 
@@ -41,11 +45,40 @@ Beispiel:
   - "DDC 230"
   - "BC MEX"
   - "BC E+p"
+  - "BC PB"
 
 Ergebnis:
-- "20 // 200, 230 // E+p, MEX"
+- "20 // 200, 230 // E+p, MEX, PB"
 
-Durch die Zuordnung der wichtigsten Tags auf die Tasten 1-9 kann man sehr effizient Tags vergeben und dann per "Bestellnotiz eintragen" die Bestellnotizen für eine gesamte Bestellung en bloc eintragen lassen.
+Der bequemste Weg, die DDC- und BC-Tags zu vergeben, sind die beiden Picker-Dialoge "DDC-Tag hinzufügen…" und "Bestellcode wählen…" (siehe unten). Alternativ lassen sich die wichtigsten Tags in Zotero auf die Tasten 1–9 legen, um sie noch schneller zuweisen zu können.
+
+### DDC-Tag hinzufügen
+
+Öffnet einen durchsuchbaren Dialog mit der DNB-CH-Klassifikation. Mehrere DDCs können in einer Session ausgewählt und gleichzeitig auf alle markierten Titel angewendet werden.
+
+- **Footer-Chips** zeigen den aktuellen Stand:
+  - "Vergeben (alle)" — bei allen markierten Items bereits gesetzt
+  - "Vergeben (teilw.)" — nur bei einem Teil der Items gesetzt (orange)
+  - "Auswahl" — aktuelle Picker-Auswahl, in Toggle-Reihenfolge
+- **Tastenkürzel** im Dialog:
+  - `Enter` — Eintrag auswählen
+  - `Shift+Enter` — auswählen und Filter zurücksetzen
+  - `Cmd/Ctrl+Enter` — Auswahl übernehmen
+  - `Esc` — abbrechen
+- **Globaler Shortcut** zum Öffnen des Pickers konfigurierbar unter Einstellungen → "Tastenkombinationen" → "DDC-Auswahl" (Default leer).
+
+### Bestellcode wählen
+
+Gleicher Dialog-Stil wie der DDC-Picker, aber für die Bestellcodes. Die Einträge sind in Gruppen organisiert:
+
+- **Print / Verfügbarkeit** — MEX-Varianten (MEX, MEXo, MEXp), UBE, SLSP
+- **E-Book** — E1/E3/E+ inklusive `p`-/`s`-/`ps`-Varianten, OA
+- **Format** — PB (Paperback)
+- **Bernensia** — Ausleihe-Varianten (Ausleihe, +Archiv, +Archiv+Ansicht), bb (Berner Belletristik)
+
+Zusätzlich erlaubt der Dialog **Freitext-Eingabe** für seltene oder ad-hoc-Codes (`+ "<text>" hinzufügen` als letzter Treffer in der Filterliste).
+
+Tastenkürzel im Dialog identisch zum DDC-Picker; globaler Shortcut konfigurierbar unter Einstellungen → "BC-Auswahl".
 
 ## Entwicklung
 
