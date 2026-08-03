@@ -1,5 +1,8 @@
 # Änderungen
 
+## v0.5.2
+- Kompatibilität mit Zotero 10
+
 ## v0.5.1
 - **Feature**: Neuer Bestellcode `PB` (Paperback) in neuer Picker-Gruppe „Format"
 - Standortcheck-Tags mit `__`-Präfix, damit sie im Tag-Selektor ganz oben einsortiert werden; alte unprefixte Tags werden beim nächsten „Standorte abfragen"-Lauf automatisch ersetzt
